@@ -1,8 +1,7 @@
-package libhttp
+package module
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/base64"
 	"fmt"
 	"hash"
@@ -38,11 +37,8 @@ func standBase64(braw []byte) []byte {
 
 }
 
-func favicohash(host string) string {
+func favicohash(host string, tr *http.Transport) string {
 	timeout := time.Duration(8 * time.Second)
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
 	client := http.Client{
 		Timeout:   timeout,
 		Transport: tr,

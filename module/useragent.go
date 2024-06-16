@@ -1,4 +1,4 @@
-package libhttp
+package module
 
 import (
 	"math/rand"

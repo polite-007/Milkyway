@@ -1,4 +1,4 @@
-package libhttp
+package module
 
 import (
 	"crypto/tls"
@@ -9,6 +9,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 type httpResult struct {
@@ -33,20 +35,22 @@ func extractValue(regRule string, body string) ([][]string, error) {
 }
 
 func getTitle(httpBody string) string {
-	title, err := extractValue("<title>(.*?)</title>", httpBody)
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(httpBody))
 	if err != nil {
 		return "Not found"
-	} else {
-		return title[0][1]
 	}
+	title := doc.Find("title").Text()
+	title = strings.Replace(title, "\n", "", -1)
+	title = strings.Trim(title, " ")
+	return title
 }
 
 func getJsUrl(httpBody string) []string {
-	regRules := []string{`<script.*?src="(.*?)"[^>]*>`}
+	regRules := []string{`<script.*?src="(.*?)"[^>]*>`, `href="[http|https](.*?\.js)"`}
 	var jsUrlList []string
 	for _, regRule := range regRules {
 		jsUrls, err := extractValue(regRule, httpBody)
-		if err != nil {
+		if err != nil || len(jsUrls) == 0 {
 			continue
 		}
 		for _, jsUrl := range jsUrls {
@@ -60,15 +64,22 @@ func getJsUrl(httpBody string) []string {
 			jsUrlList = append(jsUrlList, jsUrl[1])
 		}
 	}
-	return nil
+	return jsUrlList
 }
 
-func getFavHash(httpBody string, httpUrl string) string {
-	favPaths, err := extractValue(`href="(.*?favicon.*?)"`, httpBody)
-	var favpath string
-	if err != nil {
-		return ""
+func getFavHash(httpBody string, httpUrl string, tr *http.Transport) string {
+	rules := []string{`rel="icon" type="image/png" href="(.*?favicon.*?)"`}
+	var favPaths [][]string
+	for _, rule := range rules {
+		favUrls, err := extractValue(rule, httpBody)
+		if err != nil || len(favUrls) == 0 {
+			continue
+		}
+		for _, favUrl := range favUrls {
+			favPaths = append(favPaths, favUrl)
+		}
 	}
+	var favpath string
 	u, err := url.Parse(httpUrl)
 	if err != nil {
 		panic(err)
@@ -88,7 +99,7 @@ func getFavHash(httpBody string, httpUrl string) string {
 	} else {
 		favpath = httpUrl + "/favicon.ico"
 	}
-	return favicohash(favpath)
+	return favicohash(favpath, tr)
 }
 
 func HttpRequest(httpUrl string, httpProxy string) (*httpResult, error) {
@@ -137,7 +148,7 @@ func HttpRequest(httpUrl string, httpProxy string) (*httpResult, error) {
 			server = "None"
 		}
 	}
-	favHash := getFavHash(bodyNew, httpUrl)
+	favHash := getFavHash(bodyNew, httpUrl, transport)
 	jsUrl := getJsUrl(bodyNew)
 	result := httpResult{httpUrl, header, server, bodyNew, resp.StatusCode, len(bodyNew), title, jsUrl, favHash}
 	return &result, nil
