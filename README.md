@@ -1,11 +1,17 @@
-# Milkyway
+<p align="center">
+  <img src="images/Milkyway-logo.svg" width="100px" alt="afrog">
+</p>
 
-### Milkyway是一个指纹识别和漏洞扫描的工具:
+<h4 align="center">An innovative vulnerability scanner and Pentest Tool </h4>
 
-* 指纹识别支持web框架识别，供应商产品识别，应用层协议识别
-* 漏洞扫描支持协议爆破，poc扫描，知名web产品扫描
-* 支持指定漏洞扫描
 
-#### 亮点：该工具相对传统漏扫工具的大批量扫描的优点，首先会进行指纹识别，通过指纹识别的结果来使用相应的协议爆破或者poc进行扫描，这将大大缩小发包量和等待时间
+## What is Milkyway
 
-#### 后续升级：增大指纹库和改善匹配的正确率(宁愿误报，不漏报)，扩大漏洞库，
+MilkyWay is an innovative vulnerability scanner designed to enhance efficiency and accuracy in web application security assessments. Unlike traditional scanners, MilkyWay employs advanced fingerprinting techniques to tailor its scan approach to each target, reducing unnecessary network traffic and server load. By intelligently selecting and deploying Proof of Concepts (POCs) based on identified fingerprints, MilkyWay ensures precise vulnerability detection without overwhelming resources.
+## Features
+
+* [x] Open source
+* [x] Continuously updated fingerprint database
+* [x] Fast, stable, with low false positives
+* [x] Customizable and stably updatable PoCs
+* [x] Support fofa, quake
