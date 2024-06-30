@@ -1,31 +1,87 @@
 package cmd
 
 import (
+	"context"
+	"fmt"
 	"os"
+	"os/signal"
 
+	"github.com/polite007/Milkyway/module"
 	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "Milkyway",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Use:          "Milkyway",
+	Short:        "An innovative vulnerability scanner and Pentest Tool",
+	SilenceUsage: true,
 }
 
+var mainContext context.Context
+
 func Execute() {
-	err := rootCmd.Execute()
-	if err != nil {
+	var cancel context.CancelFunc
+	mainContext, cancel = context.WithCancel(context.Background())
+	defer cancel()
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt)
+	defer func() {
+		signal.Stop(signalChan)
+		cancel()
+	}()
+	go func() {
+		select {
+		case <-signalChan:
+			// caught CTRL+C
+			fmt.Println("\n[!] Keyboard interrupt detected, terminating.")
+			cancel()
+		case <-mainContext.Done():
+		}
+	}()
+	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
 }
 
-func init() {
+func parseGlobalOptions() (*module.Options, error) {
+	globalOpts := module.NewOptions()
+	threads, err := rootCmd.Flags().GetInt("threads")
+	if err != nil {
+		return nil, fmt.Errorf("invalid value for threads: %w", err)
+	}
 
+	if threads <= 0 {
+		return nil, fmt.Errorf("threads must be bigger than 0")
+	}
+	globalOpts.Threads = threads
+
+	target, err := rootCmd.Flags().GetString("url")
+	if err != nil {
+		return nil, fmt.Errorf("invalid value for url: %w", err)
+	}
+	globalOpts.Url = target
+
+	output, err := rootCmd.Flags().GetString("output")
+	if err != nil {
+		return nil, fmt.Errorf("invalid value for output: %w", err)
+	}
+	globalOpts.Output = output
+
+	Proxy, err := rootCmd.Flags().GetString("proxy")
+	if err != nil {
+		return nil, fmt.Errorf("invalid value for proxy: %w", err)
+	}
+	globalOpts.Proxy = Proxy
+
+	file, err := rootCmd.Flags().GetString("file")
+	if err != nil {
+		return nil, fmt.Errorf("invalid value for file: %w", err)
+	}
+	globalOpts.File = file
+
+	return globalOpts, nil
+}
+
+func init() {
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 	rootCmd.PersistentFlags().IntP("threads", "t", 10, "Number of concurrent threads")
 	rootCmd.PersistentFlags().StringP("output", "o", "", "Output file to write results to (defaults to result.xlsx)")
