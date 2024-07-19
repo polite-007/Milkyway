@@ -4,11 +4,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// fingerCmd represents the finger command
 var fingerCmd *cobra.Command
 
 func runFinger(cmd *cobra.Command, args []string) error {
-	globalopts, pluginopts, err := parseDirOptions()
+	//globalopts, pluginopts, err := parseDirOptions()
 
 	return nil
 }

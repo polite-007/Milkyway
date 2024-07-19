@@ -1,4 +1,4 @@
-package module
+package httpcreate
 
 import (
 	"crypto/tls"
@@ -111,8 +111,7 @@ func HttpRequest(httpUrl string, httpProxy string) (*httpResult, error) {
 			return url.Parse(httpProxy)
 		}
 		transport = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			Proxy:           proxys,
+			Proxy: proxys,
 		}
 	}
 	client := &http.Client{

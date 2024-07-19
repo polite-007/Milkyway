@@ -3,10 +3,10 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/polite007/Milkyway/module/httpcreate"
 	"os"
 	"os/signal"
 
-	"github.com/polite007/Milkyway/module"
 	"github.com/spf13/cobra"
 )
 
@@ -42,8 +42,8 @@ func Execute() {
 	}
 }
 
-func parseGlobalOptions() (*module.Options, error) {
-	globalOpts := module.NewOptions()
+func parseGlobalOptions() (*httpcreate.Options, error) {
+	globalOpts := httpcreate.NewOptions()
 	threads, err := rootCmd.Flags().GetInt("threads")
 	if err != nil {
 		return nil, fmt.Errorf("invalid value for threads: %w", err)
