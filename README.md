@@ -1,6 +1,6 @@
 还在编写中，敬请期待
 <p align="center">
-  <img src="images/Milkyway-logo.svg" width="100px" alt="afrog">
+  <img src="static/images/Milkyway-logo.svg" width="100px" alt="afrog">
 </p>
 
 <h4 align="center">An innovative vulnerability scanner and Pentest Tool </h4>

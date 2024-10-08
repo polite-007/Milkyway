@@ -1,4 +1,4 @@
-package queue
+package utils
 
 import (
 	"container/list"
@@ -41,7 +41,7 @@ func (q *Queue) Pop() interface{} {
 	return v
 }
 
-// 返回pop列表和实际长度
+// Pops 返回pop列表和实际长度
 func (q *Queue) Pops(num int) ([]interface{}, int) {
 	vals := make([]interface{}, num)
 	i := 0
