@@ -2,6 +2,7 @@ package protocol_scan
 
 import (
 	"fmt"
+	"github.com/polite007/Milkyway/pkg/utils"
 	"net"
 	"strconv"
 	"strings"
@@ -65,8 +66,8 @@ func LdapRootDseScan(addr string) (string, error) {
 			numberOne, _ = strconv.Atoi(fmt.Sprintf("%x", data[1]))
 			if numberOne >= 81 && numberOne <= 89 {
 
-				numberTwo := bytesToInt(data[2 : numberOne-78])
-				Value := isPrintableInfo(data[numberOne-78 : numberTwo+numberOne-78])
+				numberTwo := utils.Byte.BytesToInt(data[2 : numberOne-78])
+				Value := utils.Byte.IsPrintableInfo(data[numberOne-78 : numberTwo+numberOne-78])
 				if len(data) >= numberTwo+numberOne-78 {
 					data = data[numberTwo+numberOne-78:]
 				} else {

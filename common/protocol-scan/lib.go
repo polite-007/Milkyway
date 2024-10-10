@@ -57,19 +57,6 @@ func readDataLdap(conn net.Conn) ([]byte, error) {
 	return bufAll, nil
 }
 
-// 判断是否为可打印字符
-func isPrintableInfo(bytes []byte) string {
-	str := ""
-	for _, b := range bytes {
-		if b >= 32 && b <= 126 {
-			str += fmt.Sprintf("%c", b)
-		} else {
-			str += fmt.Sprintf("\\x%02X", b)
-		}
-	}
-	return str
-}
-
 // 将字节数组转换为整数
 func bytesToInt(b []byte) int {
 	var result uint64

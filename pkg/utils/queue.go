@@ -6,30 +6,30 @@ import (
 	"sync"
 )
 
-type Queue struct {
+type queue struct {
 	l    sync.Mutex
 	data *list.List
 }
 
-func NewQueue() *Queue {
-	q := new(Queue)
+func NewQueue() *queue {
+	q := new(queue)
 	q.data = list.New()
 	return q
 }
 
-func (q *Queue) Push(v interface{}) *list.Element {
+func (q *queue) Push(v interface{}) *list.Element {
 	q.l.Lock()
 	defer q.l.Unlock()
 	return q.data.PushFront(v)
 }
 
-func (q *Queue) PushBack(v interface{}) *list.Element {
+func (q *queue) PushBack(v interface{}) *list.Element {
 	q.l.Lock()
 	defer q.l.Unlock()
 	return q.data.PushBack(v)
 }
 
-func (q *Queue) Pop() interface{} {
+func (q *queue) Pop() interface{} {
 	q.l.Lock()
 	defer q.l.Unlock()
 	iter := q.data.Back()
@@ -42,7 +42,7 @@ func (q *Queue) Pop() interface{} {
 }
 
 // Pops 返回pop列表和实际长度
-func (q *Queue) Pops(num int) ([]interface{}, int) {
+func (q *queue) Pops(num int) ([]interface{}, int) {
 	vals := make([]interface{}, num)
 	i := 0
 	q.l.Lock()
@@ -65,17 +65,17 @@ func (q *Queue) Pops(num int) ([]interface{}, int) {
 	return vals, i
 }
 
-func (q *Queue) Remove(v *list.Element) interface{} {
+func (q *queue) Remove(v *list.Element) interface{} {
 	q.l.Lock()
 	defer q.l.Unlock()
 	return q.data.Remove(v)
 }
 
-func (q *Queue) Len() int {
+func (q *queue) Len() int {
 	return q.data.Len()
 }
 
-func (q *Queue) Dump() {
+func (q *queue) Dump() {
 	for iter := q.data.Back(); iter != nil; iter = iter.Prev() {
 		fmt.Println("item:", iter.Value)
 	}

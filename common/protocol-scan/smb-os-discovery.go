@@ -3,6 +3,7 @@ package protocol_scan
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/polite007/Milkyway/pkg/utils"
 	"net"
 	"strings"
 	"time"
@@ -43,7 +44,7 @@ func SmbOsDiscoveryScan(addr string) (string, error) {
 
 	sessionResponseContent := res[36:]
 	if len(sessionResponseContent) < 4 {
-		return isPrintableInfo(res), nil
+		return utils.Byte.IsPrintableInfo(res), nil
 	}
 	securityBlobLength := bytesToInt(append([]byte{}, sessionResponseContent[8], sessionResponseContent[7]))
 
