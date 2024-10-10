@@ -8,11 +8,7 @@
 
 ## What is Milkyway
 
-MilkyWay is an innovative vulnerability scanner designed to enhance efficiency and accuracy in web application security assessments. Unlike traditional scanners, MilkyWay employs advanced fingerprinting techniques to tailor its scan approach to each target, reducing unnecessary network traffic and server load. By intelligently selecting and deploying Proof of Concepts (POCs) based on identified fingerprints, MilkyWay ensures precise vulnerability detection without overwhelming resources.
-## Features
+MilkyWay 定位是内网扫描工具，它结合了资产探测，协议爆破，指纹识别，漏洞检测等功能，但不同常规扫描工具的是漏洞检测的目标是指纹识别后的结果，
+即只有确认该资产为某类应用时才进行漏洞检测，这样的做法大大加速了扫描速度。老旧的漏洞扫描会对每个存活目标进行漏洞库的整库检测，这无疑会导致扫描时间过长，以及流量的浪费。
 
-* [x] Open source
-* [x] Continuously updated fingerprint database
-* [x] Fast, stable, with low false positives
-* [x] Customizable and stably updatable PoCs
-* [x] Support fofa, quake
+## Features
