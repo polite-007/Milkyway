@@ -38,9 +38,6 @@ MilkyWay 定位是内网扫描工具，它目前结合了机器探活，端口�
 5. 附带功能
    * http/socks5代理
 
-编译命令
-> go build -ldflags="-s -w " -trimpath main.go
-
 ## Usage Tutorial
 
 `milkyway.exe -t 192.168.1.1/24 (端口默认是default, 排名前809个端口)`
