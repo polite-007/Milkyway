@@ -7,7 +7,7 @@
 
 ## What is Milkyway
 
-MilkyWay 定位是内网扫描工具，它目前结合了机器探活，端口探活，协议识别等功能。协议识别不依赖nmap
+MilkyWay 一款内网综合扫描工具，目前结合机器探活，端口探活，协议识别，漏洞扫描等功能。指纹识别手动研发，不依赖nmap，同时提供了多种代理支持和实时日志打印功能
 
 ## Milkyway Features
 
@@ -19,16 +19,19 @@ MilkyWay 定位是内网扫描工具，它目前结合了机器探活，端口�
         * redis
         * smb
         * ldap
+        * ssh
         * to be continued
     * web 探测
 
 
 2. 爆破功能
-   * to be continued
+   * ssh
+   * mysql
+   * redis
 
 
 3. 漏洞检测
-   * to be continued
+   * redis 未授权
 
 
 4. 漏洞利用
@@ -37,6 +40,10 @@ MilkyWay 定位是内网扫描工具，它目前结合了机器探活，端口�
 
 5. 附带功能
    * http/socks5代理
+   * 目标从文件读取
+   * 支持fofa语句,目标从fofa拉取
+   * 日志实时打印
+   * 支持url的输入
 
 ## Usage Tutorial
 
@@ -52,13 +59,16 @@ MilkyWay 定位是内网扫描工具，它目前结合了机器探活，端口�
 
 `milkyway.exe -t 192.168.1.1/24 -c 500 (设置线程池工人数量)`
 
+`milkyway.exe --fofaquery fofaquery.txt -k your-key -p 6379 (从fofa语句提取目标，进行6379端口的扫描)`
+
 `milkyway.exe -u https://www.baidu.com (web 探测)`
+
 ### Running Picture
-
-
 
 ![img.png](./static/images/running_picture1.png)
 
 ![img.png](./static/images/running_picture2.png)
 
 ![img.png](./static/images/running_picture3.png)
+
+![img.png](./static/images/running_picture4.png)
