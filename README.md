@@ -7,7 +7,7 @@
 
 ## What is Milkyway
 
-MilkyWay (银河) 一款内网综合扫描工具，目前结合机器探活，端口探活，协议识别，漏洞扫描等功能。指纹识别手动研发，不依赖nmap，同时提供了多种代理支持和实时日志打印功能
+MilkyWay 一款内网综合扫描工具，目前结合机器探活，端口探活，协议识别，漏洞扫描等功能。指纹识别手动研发，不依赖nmap，同时提供了多种代理支持和实时日志打印功能
 
 ## Milkyway Features
 
@@ -20,6 +20,10 @@ MilkyWay (银河) 一款内网综合扫描工具，目前结合机器探活，�
         * smb
         * ldap
         * ssh
+        * vnc
+        * ftp
+        * smtp
+        * rdp
         * to be continued
     * web 探测
 
