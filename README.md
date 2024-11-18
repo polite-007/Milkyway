@@ -27,16 +27,13 @@ MilkyWay 一款内网综合扫描工具，目前结合机器探活，端口探�
         * to be continued
     * web 探测
 
-
 2. 爆破功能
    * ssh
    * mysql
    * redis
 
-
 3. 漏洞检测
    * redis 未授权
-
 
 4. 漏洞利用
    * to be continued
@@ -48,6 +45,11 @@ MilkyWay 一款内网综合扫描工具，目前结合机器探活，端口探�
    * 支持fofa语句,目标从fofa拉取
    * 日志实时打印
    * 支持url的输入
+
+## SomeThing
+
+--full-scan 是否对开放的端口进行全协议识别，默认的协议识别策略是对常用端口进行只进行对应的协议识别，比如22-ssh，3306-mysql，如果开启全协议识别，扫描速度势必会慢很多
+--verbose 是否打印协议的详细信息，默认只打印协议名称
 
 ## Usage Tutorial
 
