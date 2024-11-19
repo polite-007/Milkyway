@@ -73,11 +73,15 @@ MilkyWay 一款内网综合扫描工具，目前结合机器探活，端口探�
 
 `milkyway.exe --poc-file ./your_file (使用自定义的poc文件/目录进行poc预加载)`
 
+`milkyway.exe -t 127.0.0.1 --finger-match false (漏洞扫描不进行指纹匹配)`
+
 ### Running Picture
 
 ![img.png](./static/images/running_picture1.png)
 
 ![img.png](./static/images/running_picture2.png)
+
+![img.png](./static/images/running_picture5.png)
 
 ![img.png](./static/images/running_picture3.png)
 
