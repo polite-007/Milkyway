@@ -14,19 +14,21 @@
     * web 探测
     * 协议识别 (mysql, redis, smb, ldap, ssh, vnc, ftp, smtp, rdp)
 2. 爆破功能
-   * ssh
-   * mysql
-   * redis
+   * `ssh`
+   * `mysql`
+   * `redis`
+   * to be continued
 3. 漏洞检测
-   * redis 未授权
+   * `redis`未授权
    * 支持nuclei漏洞引擎，内置4000+常用poc
    * 支持自定义漏洞预加载目录或文件
+   * 支持通过`tags`, `id`来选择poc
 5. 附带功能
    * http/socks5代理
    * 目标从文件读取
-   * 支持fofa语句,目标从fofa拉取
+   * 支持`fofa`语句,目标从`fofa`拉取
    * 日志实时打印
-   * 支持url的输入
+   * 支持`url`的输入
 
 ### Advanced Configuration
 
