@@ -19,7 +19,7 @@
    * redis
 3. 漏洞检测
    * redis 未授权
-   * 支持nuclei漏洞引擎，内置8000个poc
+   * 支持nuclei漏洞引擎，内置4000+常用poc
    * 支持自定义漏洞预加载目录或文件
 5. 附带功能
    * http/socks5代理
@@ -34,7 +34,7 @@
 * `--verbose     ` 打印协议的详细信息,默认不打印
 * `--finger-match` 漏洞扫描前的指纹规则匹配,默认开启
 * `--poc-file    ` 自定义`nuclei poc`文件/目录
-* `--fofaquery   ` 使用`fofa`语句提取目标 `当使用fofa语句导入目标时，系统环境变量FOFA_KEY必须设置成的你的fofa-key`
+* `--fofa-query  ` 使用`fofa`语句提取目标 `当使用fofa语句导入目标时，系统环境变量FOFA_KEY必须设置成的你的fofa-key`
 
 ### Basic Usage
 
@@ -52,7 +52,7 @@
 
 `milkyway.exe -t 192.168.1.1/24 --finger-match false` (漏洞扫描不进行指纹匹配)
 
-`milkyway.exe --fofaquery domain=baidu.com` (fofa语句提取目标)
+`milkyway.exe --fofa-query domain=baidu.com` (fofa语句提取目标)
 
 `milkyway.exe -t 192.168.1.1/24 --poc-file ./your_file` (自定义漏洞目录)
 
