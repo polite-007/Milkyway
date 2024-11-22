@@ -30,11 +30,11 @@
 
 ### Advanced Configuration
 
-* `--full-scan     ` 是否对开放的端口进行全协议识别，默认的协议识别策略是对常用端口进行只进行对应的协议识别，比如22-ssh，3306-mysql，如果开启全协议识别，扫描速度势必会慢很多
-* `--verbose       ` 是否打印协议的详细信息，默认只打印协议名称
-* `--finger-match  ` 
-* `--poc-file      ` 自定义`nuclei poc`文件/目录
-* `--fofaquery     ` 使用`fofa`语句提取目标 `当使用fofa语句导入目标时，系统环境变量FOFA_KEY必须设置成的你的fofa-key`
+* `--full-scan   ` 对开放的端口进行全协议识别,默认只进行特定端口的协议识别
+* `--verbose     ` 打印协议的详细信息,默认不打印
+* `--finger-match` 漏洞扫描前的指纹规则匹配,默认开启
+* `--poc-file    ` 自定义`nuclei poc`文件/目录
+* `--fofaquery   ` 使用`fofa`语句提取目标 `当使用fofa语句导入目标时，系统环境变量FOFA_KEY必须设置成的你的fofa-key`
 
 ### Basic Usage
 
@@ -46,21 +46,18 @@
 
 ### Advanced Usage
 
-`milkyway.exe -t 192.168.1.1/24 -p company (使用公司常用87个端口)`
+`milkyway.exe -t 192.168.1.1/24 -p company` (使用公司常用87个端口)
 
-`sql`: 数据库常用端口
-`all`: 所有端口
-`small`: 常用前12个端口
+`milkyway.exe -t 192.168.1.1/24 -p small --full-scan true` (对前12个端口进行全协议识别)
 
-`milkyway.exe -t 192.168.1.1/24 -p small --full-scan true (对前12个端口进行全协议识别)`
+`milkyway.exe -t 192.168.1.1/24 --finger-match false` (漏洞扫描不进行指纹匹配)
 
-`milkyway.exe -t 192.168.1.1/24 --finger-match false (漏洞扫描不进行指纹匹配)`
+`milkyway.exe --fofaquery domain=baidu.com` (fofa语句提取目标)
 
-`milkyway.exe --fofaquery domain=baidu.com -p 6379 (从fofa语句提取目标，进行6379端口的扫描)`
+`milkyway.exe -t 192.168.1.1/24 --poc-file ./your_file` (自定义漏洞目录)
 
-`milkyway.exe -t 192.168.1.1/24 --poc-file ./your_file --poc-tags cve (使用自定义的poc文件/目录进行poc预加载,并只选择cve标签的poc进行漏洞扫描)`
-
-
+`milkyway.exe -t 192.168.1.1/24 --poc-tags cve,cnvd` (指定多个poc标签)
+> sql: 常用数据库端口, small: 常用前12个端口, all: 全端口
 ### Running Picture
 
 ![img.png](./static/images/running_picture1.png)
