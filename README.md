@@ -5,6 +5,8 @@
 ## What is Milkyway
 
 一款内网全方位扫描工具，具备高效的机器探活，端口探活，协议识别，漏洞扫描等功能,
+* 纯go实现的协议识别
+* 丰富的扫描模式
 
 ## Milkyway Features
 
@@ -17,9 +19,11 @@
    * `ssh`
    * `mysql`
    * `redis`
+   * `vnc`
    * to be continued
 3. 漏洞检测
    * `redis`未授权
+   * 永恒之蓝/永恒之黑
    * 支持nuclei漏洞引擎，内置4000+常用poc
    * 支持自定义漏洞预加载目录或文件
    * 支持通过`tags`, `id`来选择poc
