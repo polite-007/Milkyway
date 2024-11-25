@@ -1,3 +1,4 @@
+[![Latest release](https://img.shields.io/github/v/release/polite-007/Milkyway)](https://github.com/polite-007/Milkyway/releases/latest)![GitHub Release Date](https://img.shields.io/github/release-date/polite-007/Milkyway)![GitHub All Releases](https://img.shields.io/github/downloads/polite-007/Milkyway/total)[![GitHub issues](https://img.shields.io/github/issues/polite-007/Milkyway)](https://github.com/polite-007/Milkyway/issues)
 <p align="center">
   <img src="static/images/Milkyway-logo.svg" width="100px" alt="milkyway">
 </p>
