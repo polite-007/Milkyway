@@ -2,6 +2,8 @@
   <img src="static/images/Milkyway-logo.svg" width="100px" alt="milkyway">
 </p>
 
+> 本工具仅供安全测试人员运用于授权测试, 禁止用于未授权测试, 违者责任自负
+
 ## What is Milkyway
 
 一款内网全方位扫描工具，具备高效的机器探活，端口探活，协议识别，指纹识别，漏洞扫描等功能,
