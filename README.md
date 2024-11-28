@@ -80,10 +80,6 @@
 
 ![img.png](./static/images/running_picture4.png)
 
-<p align="center">
-  <img src="static/images/one.png" width="200px" alt="milkyway">
-</p>
-
 
 # 参考项目
 https://github.com/shadow1ng/fscan
