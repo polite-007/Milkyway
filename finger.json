@@ -1,0 +1,40 @@
+{
+	"fingerprint": [
+		{
+			"cms": "致远OA",
+			"method": "keyword",
+			"location": "body",
+			"keyword": [
+				"/seeyon/USER-DATA/IMAGES/LOGIN/login.gif"
+			],
+			"tag": "oa"
+		},
+		{
+			"cms": "致远OA",
+			"method": "keyword",
+			"location": "body",
+			"keyword": [
+				"/seeyon/common/"
+			],
+			"tag": "oa"
+		},
+		{
+			"cms": "通用企业管理软件",
+			"method": "keyword",
+			"location": "body",
+			"keyword": [
+				"/cwbase/web/Login.aspx"
+			],
+			"tag": "oa,upload"
+		},
+		{
+			"cms": "致远OA M3 Server",
+			"method": "keyword",
+			"location": "title",
+			"keyword": [
+				"M3 Server"
+			],
+			"tag": "oa"
+		}
+	]
+}
