@@ -43,7 +43,8 @@
    * 支持`url`的输入
 
 ### Advanced Configuration
-
+* `--finger-file ` 自定义web指纹加载
+* `--scan-random ` 端口扫描是否随机，默认不随机
 * `--full-scan   ` 对开放的端口进行全协议识别,默认只进行特定端口的协议识别
 * `--verbose     ` 打印协议的详细信息,默认不打印
 * `--finger-match` 漏洞扫描前的指纹规则匹配,默认开启
