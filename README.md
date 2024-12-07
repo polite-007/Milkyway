@@ -44,10 +44,10 @@
 
 ### Advanced Configuration
 * `--finger-file ` 自定义web指纹加载
-* `--scan-random ` 端口扫描是否随机，默认不随机
+* `--scan-random ` 端口扫描是否随机
 * `--full-scan   ` 对开放的端口进行全协议识别,默认只进行特定端口的协议识别
-* `--verbose     ` 打印协议的详细信息,默认不打印
-* `--finger-match` 漏洞扫描前的指纹规则匹配,默认开启
+* `--verbose     ` 打印协议的详细信息
+* `--no-match    ` 漏洞扫描前的指纹规则不进行匹配
 * `--poc-file    ` 自定义`nuclei poc`文件/目录
 * `--fofa-query  ` 使用`fofa`语句提取目标 `当使用fofa语句导入目标时，系统环境变量FOFA_KEY必须设置成的你的fofa-key`
 
@@ -63,11 +63,13 @@
 
 `milkyway.exe -t 192.168.1.1/24 -p company` (使用公司常用87个端口)
 
-`milkyway.exe -t 192.168.1.1/24 -p small --full-scan true` (对前12个端口进行全协议识别)
+`milkyway.exe -t 192.168.1.1/24 -p small --full-scan` (对前12个端口进行全协议识别)
 
-`milkyway.exe -t 192.168.1.1/24 --finger-match false` (漏洞扫描不进行指纹匹配)
+`milkyway.exe -t 192.168.1.1/24 --no-ping` (跳过icmp扫描)
 
-`milkyway.exe --fofa-query domain=baidu.com` (fofa语句提取目标)
+`milkyway.exe -t 192.168.1.1/24 --no-match` (漏洞扫描不进行指纹匹配,即下发全量)
+
+`milkyway.exe --fofa-query 'domain=baidu.com'` (fofa语句提取目标)
 
 `milkyway.exe -t 192.168.1.1/24 --poc-file ./your_file` (自定义漏洞目录)
 
