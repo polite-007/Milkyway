@@ -86,9 +86,11 @@
 ![img.png](./static/images/running_picture4.png)
 
 
-<p align="center">
-  <img src="static/images/running_picture3.png" width="300px" alt="milkyway">
-</p>
+[//]: # (<p align="center">)
+
+[//]: # (  <img src="static/images/running_picture3.png" width="300px" alt="milkyway">)
+
+[//]: # (</p>)
 
 
 
