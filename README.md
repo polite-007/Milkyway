@@ -38,7 +38,7 @@
    * 自定义指纹文件加载 (finger.json的tag是与nuclei漏洞库的tag进行匹配,支持多个)
    * http/socks5代理
    * 目标从文件读取
-   * 支持`fofa`语句,目标从`fofa`拉取 （这个是写给自己玩的）
+   * 支持`fofa`语句,目标从`fofa`拉取
    * 日志实时打印
    * 支持`url`的输入
 
