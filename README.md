@@ -59,14 +59,15 @@
 
 ### 演示案例
 
-1. 利用fofa进行外网打点
+1. 利用fofa进行外网全端口打点,并且使用乱序扫描
    
-   `milkyway.exe --fofa-query 'domain=fofa.info||domain=vulfoucs.cn' -p all --no-ping `
-
+   `milkyway.exe --fofa-query 'domain=fofa.info||host=fofa.info' -p all --no-ping --scan-random`
+   ![img.png](./static/images/running_picture6.png)
 
 2. 设置1000并发量使用无序扫描内网所有端口
 
-   `milkyway.exe -p all --scan-random -c 1000`
+   `milkyway.exe -t 192.168.1.0/24 -p all --scan-random -c 1000 --no-ping`
+   ![img.png](./static/images/running_picture7.png)
 
 ### 进阶参数使用
 
