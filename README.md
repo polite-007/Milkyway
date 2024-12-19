@@ -1,4 +1,4 @@
-[English README](https://github.com/polite-007/Milkyway/README_EN.md)
+[English README](https://github.com/polite-007/Milkyway/blob/main/README_EN.md)
 <p align="center">
   <img src="static/images/Milkyway-logo.svg" width="100px" alt="milkyway">
 </p>
