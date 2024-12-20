@@ -102,8 +102,7 @@ Milkyway is an all-in-one scanning tool with efficient features for host discove
 
 Milkyway has joined the FOFA [Co-creation Plan]((https://fofa.info/development)). Thanks to FOFA for providing account support.
 
-<img width="318" alt="image" src="https://user-images.githubusercontent.com/67818638/210543196-b76f6808-b5dd-4933-9451-0c3217dca8f5.png">
-
+<img width="318" alt="image" src="static/images/fofa.png">
 # Reference Projects
 https://github.com/shadow1ng/fscan
 

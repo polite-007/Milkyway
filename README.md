@@ -104,7 +104,7 @@
 
 Milkyway 已加入 FOFA [共创者计划](https://fofa.info/development)，感谢 FOFA 提供的账号支持。
 
-<img width="318" alt="image" src="https://user-images.githubusercontent.com/67818638/210543196-b76f6808-b5dd-4933-9451-0c3217dca8f5.png">
+<img width="318" alt="image" src="static/images/fofa.png">
 
 # 参考项目
 https://github.com/shadow1ng/fscan
