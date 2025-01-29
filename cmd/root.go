@@ -3,9 +3,10 @@ package cmd
 import (
 	"context"
 	"fmt"
-	_const "github.com/polite007/Milkyway/common/const"
-	"github.com/polite007/Milkyway/common/http_custom"
-	"github.com/polite007/Milkyway/pkg/log"
+	"github.com/polite007/Milkyway/config"
+	"github.com/polite007/Milkyway/internal/cli"
+	"github.com/polite007/Milkyway/internal/service/httpx"
+	"github.com/polite007/Milkyway/pkg/logger"
 	"github.com/spf13/cobra"
 	"os"
 	"os/signal"
@@ -13,8 +14,8 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:          "Milkyway",
-	Short:        _const.Logo,
+	Use:          config.Name,
+	Short:        config.Logo,
 	SilenceUsage: true,
 	RunE:         RunRoot,
 }
@@ -34,8 +35,6 @@ func Execute() {
 	go func() {
 		select {
 		case <-signalChan:
-			// caught CTRL+C
-			//fmt.Println("\n[!] Keyboard interrupt detected, terminating.")
 			cancel()
 			os.Exit(1)
 		case <-mainContext.Done():
@@ -48,60 +47,63 @@ func Execute() {
 
 func RunRoot(cmd *cobra.Command, args []string) error {
 	var (
-		ipList        []string
-		urlList       []string
-		err           error
-		IpPortListOne map[string][]*_const.PortProtocol
-		IpPortListTwo map[string][]*_const.PortProtocol
-		IpPortList    map[string][]*_const.PortProtocol
-		WebListOne    []*http_custom.Resps
-		WebListTwo    []*http_custom.Resps
-		WebList       []*http_custom.Resps
+		ipList  []string // ip列表
+		urlList []string // url列表
+
+		IpActiveList []string                          // 存活ip列表
+		IpPortList   map[string][]*config.PortProtocol // ip:port:protocol
+		WebListOne   []*httpx.Resps
+		WebListTwo   []*httpx.Resps
+		WebList      []*httpx.Resps
+		err          error
 	)
-	// 解析参数&获取目标
-	if err = ParseArgs(cmd); err != nil {
+	// 解析参数
+	if err = cli.ParseArgs(cmd); err != nil {
 		return err
 	}
-	printDefaultUsage1() // 打印默认信息1
-	ipList, urlList, err = ParseTarget()
+	// 获取ip列表和url列表
+	ipList, urlList, err = cli.ParseTarget()
 	if err != nil {
 		return err
 	}
-	printDefaultUsage2() // 打印默认信息2
+	// 打印默认信息
+	cli.PrintDefaultUsage()
 
 	// 开始全部任务
 	// 根据ip进行探测
 	timeNow := time.Now()
 	if len(ipList) != 0 {
-		IpPortListOne, err = IpPortScan(ipList) // 探测存活IP&端口&端口协议识别
+		IpActiveList, err = cli.IpActiveScan(ipList) // 探测存活IP&端口&端口协议识别
 		if err != nil {
 			return err
 		}
-
-		IpPortListTwo, WebListOne, err = WebScan(IpPortListOne) // 探测Web服务&返回有协议的ip/port列表
+		IpPortList, err = cli.PortActiveScan(IpActiveList)
 		if err != nil {
 			return err
 		}
-		IpPortList = MergeMaps(IpPortList, IpPortListTwo)
+		IpPortList, WebListOne, err = cli.WebActiveScan(IpPortList) // 探测Web服务&返回有协议的ip/port列表
+		if err != nil {
+			return err
+		}
 	}
 	// 根据url进行探测
 	if len(urlList) != 0 {
-		WebListTwo, err = WebScanWithDomain(urlList)
+		WebListTwo, err = cli.WebScanWithDomain(urlList)
 		if err != nil {
 			return err
 		}
 	}
 	// 协议漏洞扫描
-	if err = ProtocolVulScan(IpPortList); err != nil {
+	if err = cli.ProtocolVulScan(IpPortList); err != nil {
 		return err
 	}
 	// web漏洞扫描
 	WebList = append(WebListTwo, WebListOne...)
-	if err = WebPocVulScan(WebList); err != nil {
+	if err = cli.WebPocVulScan(WebList); err != nil {
 		return err
 	}
 	// 等待所有日志写入
-	log.LogWaitGroup.Wait()
+	logger.LogWaitGroup.Wait()
 	fmt.Printf("ScanTime: %s\n", time.Since(timeNow).String())
 	return nil
 }

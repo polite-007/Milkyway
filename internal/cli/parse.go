@@ -1,0 +1,233 @@
+package cli
+
+import (
+	"fmt"
+	"github.com/polite007/Milkyway/config"
+	"github.com/polite007/Milkyway/internal/service/httpx"
+	"github.com/polite007/Milkyway/internal/service/initpak"
+	utils "github.com/polite007/Milkyway/internal/utils"
+	"github.com/polite007/Milkyway/internal/utils/fofa"
+	"github.com/spf13/cobra"
+	"os"
+	"strings"
+)
+
+func ParseTarget() ([]string, []string, error) {
+	var (
+		list    []string
+		ipList  []string
+		urlList []string
+		err     error
+	)
+	if fofa.FofaKey != "" && config.Get().FofaQuery != "" {
+		fmt.Printf("正在使用从fofa获取目标。。。 fofa query: %s\n", config.Get().FofaQuery)
+		ipList, err = fofa.StatsIP(config.Get().FofaQuery)
+		if err != nil {
+			return nil, nil, err
+		}
+		return ipList, nil, err
+	}
+
+	if config.Get().TargetFile != "" {
+		list, err = utils.File.ReadLines(config.Get().TargetFile)
+		if err != nil {
+			return nil, nil, err
+		}
+		for _, ip := range list {
+			result, ok := utils.IsDomain(ip)
+			if ok {
+				urlList = append(urlList, result...)
+			} else {
+				ipListSimple, err := ParseStr(strings.TrimSpace(ip))
+				if err != nil {
+					return nil, nil, err
+				}
+				ipList = utils.UniqueAppend(ipList, ipListSimple...)
+			}
+		}
+		return ipList, urlList, nil
+	}
+
+	if config.Get().TargetUrl != "" {
+		urlListRaw := strings.Split(config.Get().TargetUrl, ",")
+		for _, urlSimple := range urlListRaw {
+			result, ok := utils.IsDomain(urlSimple)
+			if ok {
+				urlList = append(urlList, result...)
+			}
+		}
+		return nil, urlList, nil
+	}
+
+	if config.Get().Target != "" {
+		ipList, err = ParseStr(config.Get().Target)
+		if err != nil {
+			return nil, nil, err
+		}
+		return ipList, nil, nil
+	}
+
+	return nil, nil, config.GetErrors().ErrTargetEmpty
+}
+
+func ParseArgs(cmd *cobra.Command) error {
+	var (
+		configs = config.Get()
+		err     error
+	)
+	if configs.ScanRandom, err = cmd.Flags().GetBool("scan-random"); err != nil {
+		return err
+	}
+	if configs.FingerFile, err = cmd.Flags().GetString("finger-file"); err != nil {
+		return err
+	}
+	if fofa.FofaKey, err = cmd.Flags().GetString("fofa-key"); err != nil {
+		return err
+	}
+	fofa.FofaSize, err = cmd.Flags().GetInt("fofa-size")
+	if err != nil {
+		return err
+	}
+	configs.NoPing, err = cmd.Flags().GetBool("no-ping")
+	if err != nil {
+		return err
+	}
+	configs.FingerMatch, err = cmd.Flags().GetBool("no-match")
+	if err != nil {
+		return err
+	}
+	configs.PocFile, err = cmd.Flags().GetString("poc-file")
+	if err != nil {
+		return err
+	}
+	configs.OutputFileName, err = cmd.Flags().GetString("output")
+	if err != nil {
+		return err
+	}
+	configs.Socks5Proxy, err = cmd.Flags().GetString("socks5")
+	if err != nil {
+		return err
+	}
+	configs.WorkPoolNum, err = cmd.Flags().GetInt("concurrent")
+	if err != nil {
+		return err
+	}
+	configs.Target, err = cmd.Flags().GetString("target")
+	if err != nil {
+		return err
+	}
+	configs.TargetFile, err = cmd.Flags().GetString("file")
+	if err != nil {
+		return err
+	}
+	configs.HttpProxy, err = cmd.Flags().GetString("http-proxy")
+	if err != nil {
+		return err
+	}
+	configs.Port, err = cmd.Flags().GetString("port")
+	if err != nil {
+		return err
+	}
+	configs.TargetUrl, err = cmd.Flags().GetString("url")
+	if err != nil {
+		return err
+	}
+	configs.FofaQuery, err = cmd.Flags().GetString("fofa-query")
+	if err != nil {
+		return err
+	}
+	configs.Verbose, err = cmd.Flags().GetBool("verbose")
+	if err != nil {
+		return err
+	}
+	configs.FullScan, err = cmd.Flags().GetBool("full-scan")
+	if err != nil {
+		return err
+	}
+	configs.PocId, err = cmd.Flags().GetString("poc-id")
+	if err != nil {
+		return err
+	}
+	configs.PocTags, err = cmd.Flags().GetString("poc-tags")
+	if err != nil {
+		return err
+	}
+
+	switch configs.Port {
+	case "all":
+		configs.Port = config.PortAll
+	case "small":
+		configs.Port = config.PortSmall
+	case "company":
+		configs.Port = config.PortCompany
+	case "sql":
+		configs.Port = config.PortSql
+	case "default":
+		configs.Port = config.PortDefault
+	}
+	if err = initHttpProxy(); err != nil {
+		return err
+	}
+	if fofa.FofaKey == "" {
+		fofa.FofaKey = os.Getenv("FOFA_KEY")
+	}
+	return nil
+}
+
+func CheckProxy() string {
+	configs := config.Get()
+	if configs.Socks5Proxy == "" && configs.HttpProxy == "" {
+		return ""
+	}
+	if configs.Socks5Proxy != "" {
+		return "socks5"
+	}
+
+	if configs.HttpProxy != "" {
+		return "http"
+	}
+	return ""
+}
+
+func initHttpProxy() error {
+	configs := config.Get()
+	if configs.Socks5Proxy != "" {
+		return httpx.WithProxy(configs.Socks5Proxy)
+	}
+	if configs.HttpProxy != "" {
+		return httpx.WithProxy(configs.HttpProxy)
+	}
+	return nil
+}
+
+func InitPoc() {
+	fmt.Printf("[*] 初始化poc库\n")
+	err := initpak.InitNucleiPocList() // 初始化poc
+	if err != nil {
+		panic(err)
+	}
+	initpak.InitNculeiProxy()
+}
+
+func PrintDefaultUsage() {
+	fmt.Println(config.Logo)
+	fmt.Println("---------------GettingTarget----------")
+	fmt.Println("---------------Config-----------------")
+	fmt.Printf("threads: %d\n", config.Get().WorkPoolNum)
+	fmt.Printf("no-ping: %t\n", config.Get().NoPing)
+	if config.Get().OutputFileName != "" {
+		fmt.Printf("output file: %s\n", config.Get().OutputFileName)
+	} else {
+		fmt.Printf("output file: %s\n", "Null")
+	}
+	if config.Get().Socks5Proxy == "" && config.Get().HttpProxy == "" {
+		fmt.Printf("proxy addr: %s\n", "Null")
+	}
+	if config.Get().HttpProxy != "" {
+		fmt.Printf("proxy addr: %s\n", config.Get().HttpProxy)
+	}
+	if config.Get().Socks5Proxy != "" {
+		fmt.Printf("proxy addr: %s\n", config.Get().Socks5Proxy)
+	}
+	fmt.Printf("scan-random: %t\n", config.Get().ScanRandom)
+}

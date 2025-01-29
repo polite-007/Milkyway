@@ -5,7 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/polite007/Milkyway/common/http_custom"
+	http2 "github.com/polite007/Milkyway/internal/service/httpx"
 	"github.com/polite007/Milkyway/pkg/neutron/commons"
 	"github.com/polite007/Milkyway/pkg/neutron/operators"
 	"github.com/polite007/Milkyway/pkg/neutron/protocols"
@@ -237,7 +237,7 @@ func (r *Request) Compile(options *protocols.ExecuterOptions) error {
 	//	FollowRedirects: r.Redirects,
 	//	CookieReuse:     r.CookieReuse,
 	//}
-	r.httpClient = http_custom.Client
+	r.httpClient = http2.Client
 
 	if r.Body != "" && !strings.Contains(r.Body, "\r\n") {
 		r.Body = strings.Replace(r.Body, "\n", "\r\n", -1)
