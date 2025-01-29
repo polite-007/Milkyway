@@ -12,7 +12,7 @@
 一款全方位扫描工具，具备高效的机器探活，端口探活，协议识别，指纹识别，漏洞扫描等功能,
 * 纯go实现的协议识别
 * 丰富的扫描模式
-* 支持端口扫描的乱序 (目标越大，速度越块，准确度越高)
+* 支持端口扫描的乱序 (目标越大，速度越快，准确度越高)
 
 > 如果你觉得这款工具不错的话，求star~
 
@@ -63,11 +63,13 @@
 1. 利用fofa进行外网全端口打点,并且使用乱序扫描
    
    `milkyway.exe --fofa-query 'domain=fofa.info||host=fofa.info' -p all --no-ping --scan-random`
+
    ![img.png](./static/images/running_picture6.png)
 
-2. 设置1000并发量使用无序扫描内网所有端口
+3. 设置1000并发量使用无序扫描内网所有端口
 
    `milkyway.exe -t 192.168.1.0/24 -p all --scan-random -c 1000 --no-ping`
+   
    ![img.png](./static/images/running_picture7.png)
 
 ### 进阶参数使用

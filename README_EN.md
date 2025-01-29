@@ -62,10 +62,12 @@ Milkyway is an all-in-one scanning tool with efficient features for host discove
 1. Using fofa for external network probing, and using unordered scan:
 
     `milkyway.exe --fofa-query 'domain=vulfocus.cn||host=vulfocus.cn' -p all --no-ping --scan-random`
+   
     ![img.png](./static/images/running_picture6.png) 
-2. Setting concurrency to 1000 and using unordered scan for all internal ports:
+3. Setting concurrency to 1000 and using unordered scan for all internal ports:
     
     `milkyway.exe -t 192.168.1.0/24 -p all --scan-random -c 1000 --no-ping`
+   
     ![img.png](./static/images/running_picture7.png)
 
 ## Advanced Parameters Usage
