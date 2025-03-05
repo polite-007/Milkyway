@@ -1,8 +1,9 @@
-package task
+package task_raw
 
 import (
 	"fmt"
 	"github.com/polite007/Milkyway/config"
+	"github.com/polite007/Milkyway/internal/common"
 	"github.com/polite007/Milkyway/internal/utils/finger"
 	"github.com/polite007/Milkyway/internal/utils/httpx"
 	"github.com/polite007/Milkyway/pkg/color"
@@ -11,7 +12,7 @@ import (
 )
 
 // newWebScanTask
-func newWebScanTask(ipPortList map[string][]*config.PortProtocol) (map[string][]*config.PortProtocol, []*httpx.Resps, error) {
+func newWebScanTask(targetList []*common.IpPortProtocol) ([]*common.IpPortProtocol, []*httpx.Resps, error) {
 	NewPool := NewWorkPool(config.Get().WorkPoolNum)
 	NewPool.Start()
 
@@ -33,22 +34,25 @@ func newWebScanTask(ipPortList map[string][]*config.PortProtocol) (map[string][]
 		return nil, config.GetErrors().ErrTaskFailed
 	}
 
-	ipPortListNew := map[string][]*config.PortProtocol{}
+	var ipPortListNotWeb []*common.IpPortProtocol
+	var ipPortList []*common.IpPortProtocol
 	var result []*httpx.Resps
 
 	go func() {
-		for host, ports := range ipPortList {
-			for _, port := range ports {
-				if port.Protocol != "" {
-					ipPortListNew[host] = append(ipPortListNew[host], port)
-					continue
-				}
-				NewPool.Wg.Add(1)
-				NewPool.TaskQueue <- newTask(&Addr{
-					host: host,
-					port: port.Port,
-				}, f)
+		for _, ipPortProtocol := range targetList {
+			if ipPortProtocol.Protocol != "" {
+				ipPortListNotWeb = append(ipPortListNotWeb, &common.IpPortProtocol{
+					IP:       ipPortProtocol.IP,
+					Port:     ipPortProtocol.Port,
+					Protocol: ipPortProtocol.Protocol,
+				})
+				continue
 			}
+			NewPool.Wg.Add(1)
+			NewPool.TaskQueue <- newTask(&Addr{
+				host: ipPortProtocol.IP,
+				port: ipPortProtocol.Port,
+			}, f)
 		}
 		close(NewPool.TaskQueue) // 关闭任务队列
 		NewPool.Wg.Wait()        // 等待消费者执行完全部任务
@@ -61,7 +65,7 @@ func newWebScanTask(ipPortList map[string][]*config.PortProtocol) (map[string][]
 		}
 		resultSimple := res.(*httpx.Resps)
 		ip, port := strutils.SplitHost(resultSimple.Url.Host)
-		ipPortListNew[ip] = append(ipPortListNew[ip], &config.PortProtocol{
+		ipPortList = append(ipPortList, &common.IpPortProtocol{
 			IP:       ip,
 			Port:     port,
 			Protocol: "http",
@@ -90,20 +94,7 @@ func newWebScanTask(ipPortList map[string][]*config.PortProtocol) (map[string][]
 		result = append(result, resultSimple)
 	}
 	// 合并两个map
-	ipPortListNew = mergeMaps(ipPortList, ipPortListNew)
+	ipPortList = append(ipPortList, ipPortListNotWeb...)
 
-	return ipPortListNew, result, nil
-}
-
-// mergeMaps 合并两个map,m2存在的会覆盖m1
-func mergeMaps(m1, m2 map[string][]*config.PortProtocol) map[string][]*config.PortProtocol {
-	result := make(map[string][]*config.PortProtocol)
-	for k, v := range m1 {
-		result[k] = v
-	}
-	for k, v := range m2 {
-		result[k] = v
-	}
-
-	return result
+	return ipPortList, result, nil
 }

@@ -1,14 +1,15 @@
-package task
+package task_raw
 
 import (
 	"github.com/polite007/Milkyway/config"
+	"github.com/polite007/Milkyway/internal/common"
 	"github.com/polite007/Milkyway/internal/service/pact"
 	"math/rand"
 	"time"
 )
 
 // newPortScanTask 返回存活的端口和对应的协议
-func newPortScanTask(ipPortList map[string][]int) (map[string][]*config.PortProtocol, error) {
+func newPortScanTask(ipPortList []*common.IpPorts) (*common.TargetList, error) {
 	var PortScanTask []*Addr
 	NewPool := NewWorkPool(config.Get().WorkPoolNum)
 	NewPool.Start()
@@ -29,10 +30,10 @@ func newPortScanTask(ipPortList map[string][]int) (map[string][]*config.PortProt
 			}, nil
 		}
 	}
-	for host, ports := range ipPortList {
-		for _, port := range ports {
+	for _, ipPort := range ipPortList {
+		for _, port := range ipPort.Ports {
 			PortScanTask = append(PortScanTask, &Addr{
-				host: host,
+				host: ipPort.IP,
 				port: port,
 			})
 		}
@@ -51,22 +52,18 @@ func newPortScanTask(ipPortList map[string][]int) (map[string][]*config.PortProt
 		close(NewPool.Result)    // 关闭结果队列
 	}()
 
-	result := map[string][]*config.PortProtocol{}
+	result := common.NewIpPortProtocolList()
 	for res := range NewPool.Result {
 		if res == nil {
 			continue
 		}
 		resultSimple := res.(*Addr)
-		result[resultSimple.host] = append(result[resultSimple.host], &config.PortProtocol{
-			IP:       resultSimple.host,
-			Port:     resultSimple.port,
-			Protocol: resultSimple.protocol,
-		})
+		result.Add(resultSimple.host, resultSimple.port, resultSimple.protocol)
 	}
 	return result, nil
 }
 
-func newPortScanTaskRandom(ipPortList map[string][]int) (map[string][]*config.PortProtocol, error) {
+func newPortScanTaskRandom(ipPortList []*common.IpPorts) (*common.TargetList, error) {
 	NewPool := NewWorkPool(config.Get().WorkPoolNum)
 	NewPool.Start()
 
@@ -88,11 +85,11 @@ func newPortScanTaskRandom(ipPortList map[string][]int) (map[string][]*config.Po
 	}
 
 	go func() {
-		for host, ports := range ipPortList {
-			for _, port := range ports {
+		for _, ipPort := range ipPortList {
+			for _, port := range ipPort.Ports {
 				NewPool.Wg.Add(1)
 				NewPool.TaskQueue <- newTask(&Addr{
-					host: host,
+					host: ipPort.IP,
 					port: port,
 				}, f)
 			}
@@ -102,17 +99,13 @@ func newPortScanTaskRandom(ipPortList map[string][]int) (map[string][]*config.Po
 		close(NewPool.Result)    // 关闭结果队列
 	}()
 
-	result := map[string][]*config.PortProtocol{}
+	result := common.NewIpPortProtocolList()
 	for res := range NewPool.Result {
 		if res == nil {
 			continue
 		}
 		resultSimple := res.(*Addr)
-		result[resultSimple.host] = append(result[resultSimple.host], &config.PortProtocol{
-			IP:       resultSimple.host,
-			Port:     resultSimple.port,
-			Protocol: resultSimple.protocol,
-		})
+		result.Add(resultSimple.host, resultSimple.port, resultSimple.protocol)
 	}
 	return result, nil
 }

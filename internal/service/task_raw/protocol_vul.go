@@ -1,17 +1,18 @@
-package task
+package task_raw
 
 import (
 	"github.com/polite007/Milkyway/config"
+	"github.com/polite007/Milkyway/internal/common"
 	"github.com/polite007/Milkyway/internal/service/pact/protocol_vul"
 )
 
 // newProtocolVulScan 对ip+port+protocol进行对应的协议漏洞扫描
-func newProtocolVulScan(ipPortList map[string][]*config.PortProtocol) error {
+func newProtocolVulScan(ipPortList []*common.IpPortProtocol) error {
 	NewPool := NewWorkPool(config.Get().WorkPoolNum)
 	NewPool.Start()
 
 	f := func(args any) (any, error) {
-		p, ok := args.(*config.PortProtocol)
+		p, ok := args.(*common.IpPortProtocol)
 		if !ok {
 			return nil, config.GetErrors().ErrAssertion
 		}
@@ -20,12 +21,10 @@ func newProtocolVulScan(ipPortList map[string][]*config.PortProtocol) error {
 	}
 
 	go func() {
-		for _, ipInfo := range ipPortList {
-			for _, portInfo := range ipInfo {
-				if portInfo.Protocol != "" {
-					NewPool.Wg.Add(1)
-					NewPool.TaskQueue <- newTask(portInfo, f)
-				}
+		for _, ipPort := range ipPortList {
+			if ipPort.Protocol != "" {
+				NewPool.Wg.Add(1)
+				NewPool.TaskQueue <- newTask(ipPort, f)
 			}
 		}
 		close(NewPool.TaskQueue) // 关闭任务队列

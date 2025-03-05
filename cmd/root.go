@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"github.com/polite007/Milkyway/config"
 	"github.com/polite007/Milkyway/internal/cli"
-	"github.com/polite007/Milkyway/internal/service/task"
+	"github.com/polite007/Milkyway/internal/common"
+	"github.com/polite007/Milkyway/internal/service/task_raw"
 	"github.com/polite007/Milkyway/internal/utils/httpx"
 	"github.com/polite007/Milkyway/pkg/logger"
 	"github.com/spf13/cobra"
@@ -50,13 +51,11 @@ func RunRoot(cmd *cobra.Command, args []string) error {
 	var (
 		ipList  []string // ip列表
 		urlList []string // url列表
+		err     error
 
-		IpActiveList []string                          // 存活ip列表
-		IpPortList   map[string][]*config.PortProtocol // ip:port:protocol
-		WebListOne   []*httpx.Resps
-		WebListTwo   []*httpx.Resps
+		IpActiveList []string // 存活ip列表
+		IpPortList   []*common.IpPortProtocol
 		WebList      []*httpx.Resps
-		err          error
 	)
 	// 解析参数
 	if err = cli.ParseArgs(cmd); err != nil {
@@ -69,44 +68,41 @@ func RunRoot(cmd *cobra.Command, args []string) error {
 	}
 	// 打印默认信息
 	config.Get().PrintDefaultUsage()
-	// 开始探测&识别任务
 	// 根据ip探测
 	timeNow := time.Now()
 	if len(ipList) != 0 {
-		IpActiveList, err = task.IpActiveScan(ipList) // 探测存活IP&端口&端口协议识别
+		IpActiveList, err = task_raw.IpActiveScan(ipList) // 探测存活IP&端口&端口协议识别
 		if err != nil {
 			return err
 		}
-		IpPortList, err = task.PortActiveScan(IpActiveList)
+		IpPortList, err = task_raw.PortActiveScan(IpActiveList) // 探测端口&端口协议识别
 		if err != nil {
 			return err
 		}
-		IpPortList, WebListOne, err = task.WebActiveScan(IpPortList) // 探测Web服务&返回有协议的ip/port列表
+		IpPortList, WebList, err = task_raw.WebActiveScan(IpPortList) // 探测Web服务&返回有协议的ip/port/protocol列表
 		if err != nil {
 			return err
 		}
 	}
 	// 根据url探测
 	if len(urlList) != 0 {
-		WebListTwo, err = task.WebScanWithDomain(urlList)
+		WebListTwo, err := task_raw.WebScanWithDomain(urlList)
 		if err != nil {
 			return err
 		}
+		WebList = append(WebList, WebListTwo...)
 	}
-
-	// 开启漏洞扫描
 	// 协议漏洞扫描
-	if err = task.ProtocolVulScan(IpPortList); err != nil {
+	if err = task_raw.ProtocolVulScan(IpPortList); err != nil {
 		return err
 	}
 	// web漏洞扫描
-	WebList = append(WebListTwo, WebListOne...)
-	if err = task.WebPocVulScan(WebList); err != nil {
+	if err = task_raw.WebPocVulScan(WebList); err != nil {
 		return err
 	}
 	// 等待所有日志写入
 	logger.LogWaitGroup.Wait()
-	fmt.Printf("ScanTime: %s\n", time.Since(timeNow).String())
+	logger.OutLog(fmt.Sprintf("ScanTime: %s\n", time.Since(timeNow).String()))
 	return nil
 }
 

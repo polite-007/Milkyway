@@ -6,18 +6,12 @@ import (
 	"time"
 )
 
-type ErrorsList struct {
+type errorsList struct {
 	ErrAssertion          error
 	ErrTargetEmpty        error
 	ErrTaskFailed         error
 	ErrPortocolScanFailed error
 	ErrPortNotProtocol    error
-}
-
-type PortProtocol struct {
-	IP       string
-	Port     int
-	Protocol string
 }
 
 type Application struct {
@@ -85,7 +79,7 @@ var (
 
 // 错误
 var (
-	Errors                *ErrorsList
+	Errors                *errorsList
 	errAssertion          = errors.New("工人函数断言错误")
 	errTargetEmpty        = errors.New("目标为空")
 	errTaskFailed         = errors.New("任务执行失败")
@@ -187,11 +181,11 @@ func (c *Application) PrintDefaultUsage() {
 	fmt.Printf("scan-random: %t\n", c.ScanRandom)
 }
 
-func GetErrors() *ErrorsList {
+func GetErrors() *errorsList {
 	if Errors != nil {
 		return Errors
 	}
-	Errors = &ErrorsList{
+	Errors = &errorsList{
 		ErrAssertion:          errAssertion,
 		ErrTargetEmpty:        errTargetEmpty,
 		ErrTaskFailed:         errTaskFailed,

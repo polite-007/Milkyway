@@ -1,9 +1,10 @@
-package task
+package task_raw
 
 import (
 	"fmt"
 	"github.com/polite007/Milkyway/config"
 	"github.com/polite007/Milkyway/internal/cli"
+	"github.com/polite007/Milkyway/internal/common"
 	"github.com/polite007/Milkyway/internal/service/initpak"
 	"github.com/polite007/Milkyway/internal/utils/httpx"
 	"github.com/polite007/Milkyway/pkg/color"
@@ -14,17 +15,12 @@ import (
 
 // IpActiveScan 探测存活IP
 func IpActiveScan(ipList []string) ([]string, error) {
-	var (
-		configs = config.Get()
-	)
-	fmt.Println("---------------IpActiveScan-----------------")
-	// 探测存活IP
-	var (
-		ipAliveList = ipList
-		err         error
-	)
+	logger.OutLog("---------------IpActiveScan-----------------\n")
+	var err error
+	configs := config.Get()
+	ipAliveList := ipList
 	if configs.CheckProxy() {
-		fmt.Println("代理模式暂不支持ICMP探测,直接进行端口扫描")
+		logger.OutLog(fmt.Sprintf("代理模式暂不支持ICMP探测,直接进行端口扫描\n"))
 	} else {
 		if !configs.NoPing {
 			ipAliveList, err = newIPScanTask(ipList)
@@ -38,53 +34,56 @@ func IpActiveScan(ipList []string) ([]string, error) {
 }
 
 // PortActiveScan 探测开放端口&协议识别
-func PortActiveScan(ipAliveList []string) (map[string][]*config.PortProtocol, error) {
-	fmt.Println("---------------PortActiveScan---------------")
+func PortActiveScan(ipAliveList []string) ([]*common.IpPortProtocol, error) {
+	logger.OutLog("---------------PortActiveScan---------------\n")
 	var (
-		portScanTaskList = map[string][]int{}
-		aliveIpPortList  map[string][]*config.PortProtocol
+		portScanTaskList []*common.IpPorts
+		aliveIpPortList  *common.TargetList
 		err              error
 	)
 	for _, ip := range ipAliveList {
-		portScanTaskList[ip] = append(portScanTaskList[ip], cli.ParsePort(config.Get().Port)...)
+		portScanTaskList = append(portScanTaskList, &common.IpPorts{
+			IP:    ip,
+			Ports: cli.ParsePort(config.Get().Port),
+		})
 	}
 	if config.Get().ScanRandom {
 		aliveIpPortList, err = newPortScanTask(portScanTaskList)
 	} else {
 		aliveIpPortList, err = newPortScanTaskRandom(portScanTaskList)
 	}
-
 	if err != nil {
 		return nil, err
 	} else {
-		for ip, portProtocols := range aliveIpPortList {
-			logger.OutLog(fmt.Sprintf("Found %d ports on host %s\n", len(portProtocols), ip))
+		ipPortList := aliveIpPortList.GetIpPorts()
+		for _, d := range ipPortList {
+			logger.OutLog(fmt.Sprintf("Found %d ports on host %s\n", len(d.Ports), d.IP))
 		}
-		return aliveIpPortList, nil
+		return aliveIpPortList.GetIpPortProtocols(), nil
 	}
 }
 
 // WebActiveScan 扫描非web协议的目标,
-func WebActiveScan(ipPortList map[string][]*config.PortProtocol) (map[string][]*config.PortProtocol, []*httpx.Resps, error) {
-	fmt.Println("---------------WebActiveScan----------------")
+func WebActiveScan(ipPortList []*common.IpPortProtocol) ([]*common.IpPortProtocol, []*httpx.Resps, error) {
+	logger.OutLog("---------------WebActiveScan----------------\n")
 	return newWebScanTask(ipPortList)
 }
 
 // WebScanWithDomain url网站扫描
 func WebScanWithDomain(targetUrl []string) ([]*httpx.Resps, error) {
-	fmt.Println("---------------WebScanWithDomain------------")
+	logger.OutLog("---------------WebScanWithDomain------------\n")
 	return newWebScanWithDomainTask(targetUrl)
 }
 
 // ProtocolVulScan 协议漏洞扫描
-func ProtocolVulScan(ipPortList map[string][]*config.PortProtocol) error {
-	fmt.Println("---------------ProtocolVulScan--------------")
+func ProtocolVulScan(ipPortList []*common.IpPortProtocol) error {
+	logger.OutLog("---------------ProtocolVulScan--------------\n")
 	return newProtocolVulScan(ipPortList)
 }
 
 // WebPocVulScan 网站漏洞扫描
 func WebPocVulScan(WebList []*httpx.Resps) error {
-	fmt.Println("---------------WebPocVulScan----------------")
+	logger.OutLog("---------------WebPocVulScan----------------\n")
 	// 初始化poc引擎
 	if err := initpak.InitPocEngine(); err != nil {
 		return err

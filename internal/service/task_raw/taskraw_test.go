@@ -1,4 +1,4 @@
-package task
+package task_raw
 
 import (
 	"github.com/polite007/Milkyway/config"

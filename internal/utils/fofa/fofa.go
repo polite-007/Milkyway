@@ -116,7 +116,7 @@ func (f *FofaCore) search(fofaQuery string, cfg *fofaSearchConfig) (*hostResults
 	defer resp.Body.Close()
 
 	var result hostResults
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	if err = json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
 	}
 
