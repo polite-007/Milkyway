@@ -3,14 +3,14 @@ package task
 import (
 	"fmt"
 	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/service/finger"
-	"github.com/polite007/Milkyway/internal/service/httpx"
-	"github.com/polite007/Milkyway/internal/utils/color"
+	"github.com/polite007/Milkyway/internal/utils/finger"
+	"github.com/polite007/Milkyway/internal/utils/httpx"
+	"github.com/polite007/Milkyway/pkg/color"
 	"github.com/polite007/Milkyway/pkg/logger"
 )
 
-// NewWebScanWithDomainTask
-func NewWebScanWithDomainTask(targetUrls []string) ([]*httpx.Resps, error) {
+// newWebScanWithDomainTask
+func newWebScanWithDomainTask(targetUrls []string) ([]*httpx.Resps, error) {
 	NewPool := NewWorkPool(config.Get().WorkPoolNum)
 	NewPool.Start()
 
@@ -38,7 +38,7 @@ func NewWebScanWithDomainTask(targetUrls []string) ([]*httpx.Resps, error) {
 	go func() {
 		for _, targetUrl := range targetUrls {
 			NewPool.Wg.Add(1)
-			NewPool.TaskQueue <- NewTask(targetUrl, f)
+			NewPool.TaskQueue <- newTask(targetUrl, f)
 		}
 		close(NewPool.TaskQueue) // 关闭任务队列
 		NewPool.Wg.Wait()        // 等待消费者执行完全部任务

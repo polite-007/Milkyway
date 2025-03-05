@@ -10,7 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/service/connx"
+	"github.com/polite007/Milkyway/internal/utils/proxy"
 	"github.com/polite007/Milkyway/pkg/logger"
 	"strings"
 	"time"
@@ -35,7 +35,7 @@ func ms17010(ip string, port int) {
 
 func MS17010Scan(ip string, port int) error {
 	// connecting to a host in LAN if reachable should be very quick
-	conn, err := connx.WrapperTCP("tcp", ip+":445", config.Get().PortScanTimeout)
+	conn, err := proxy.WrapperTCP("tcp", ip+":445", config.Get().PortScanTimeout)
 	if err != nil {
 		//fmt.Printf("failed to connect to %s\n", ip)
 		return err

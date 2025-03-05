@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-// NewPortScanTask 返回存活的端口和对应的协议
-func NewPortScanTask(ipPortList map[string][]int) (map[string][]*config.PortProtocol, error) {
+// newPortScanTask 返回存活的端口和对应的协议
+func newPortScanTask(ipPortList map[string][]int) (map[string][]*config.PortProtocol, error) {
 	var PortScanTask []*Addr
 	NewPool := NewWorkPool(config.Get().WorkPoolNum)
 	NewPool.Start()
@@ -44,7 +44,7 @@ func NewPortScanTask(ipPortList map[string][]int) (map[string][]*config.PortProt
 	go func() {
 		for _, p := range PortScanTask {
 			NewPool.Wg.Add(1)
-			NewPool.TaskQueue <- NewTask(p, f)
+			NewPool.TaskQueue <- newTask(p, f)
 		}
 		close(NewPool.TaskQueue) // 关闭任务队列
 		NewPool.Wg.Wait()        // 等待消费者执行完全部任务
@@ -66,7 +66,7 @@ func NewPortScanTask(ipPortList map[string][]int) (map[string][]*config.PortProt
 	return result, nil
 }
 
-func NewPortScanTaskRandom(ipPortList map[string][]int) (map[string][]*config.PortProtocol, error) {
+func newPortScanTaskRandom(ipPortList map[string][]int) (map[string][]*config.PortProtocol, error) {
 	NewPool := NewWorkPool(config.Get().WorkPoolNum)
 	NewPool.Start()
 
@@ -91,7 +91,7 @@ func NewPortScanTaskRandom(ipPortList map[string][]int) (map[string][]*config.Po
 		for host, ports := range ipPortList {
 			for _, port := range ports {
 				NewPool.Wg.Add(1)
-				NewPool.TaskQueue <- NewTask(&Addr{
+				NewPool.TaskQueue <- newTask(&Addr{
 					host: host,
 					port: port,
 				}, f)

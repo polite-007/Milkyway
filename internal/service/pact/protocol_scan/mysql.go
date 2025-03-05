@@ -3,12 +3,12 @@ package protocol_scan
 import (
 	"fmt"
 	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/service/connx"
 	"github.com/polite007/Milkyway/internal/service/pact/protocol_scan/lib"
+	"github.com/polite007/Milkyway/internal/utils/proxy"
 )
 
 func MysqlScan(addr string) (string, error) {
-	conn, err := connx.WrapperTCP("tcp", addr, config.Get().PortScanTimeout)
+	conn, err := proxy.WrapperTCP("tcp", addr, config.Get().PortScanTimeout)
 	if err == nil {
 		defer conn.Close()
 		resp, err := lib.ReadDataMysql(conn)

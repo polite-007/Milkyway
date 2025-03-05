@@ -3,15 +3,15 @@ package protocol_scan
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/polite007/Milkyway/internal/service/connx"
 	"github.com/polite007/Milkyway/internal/service/pact/protocol_scan/lib"
-	"github.com/polite007/Milkyway/internal/utils"
+	"github.com/polite007/Milkyway/internal/utils/proxy"
+	"github.com/polite007/Milkyway/pkg/strutils"
 	"strings"
 	"time"
 )
 
 func SmbOsDiscoveryScan(addr string) (string, error) {
-	conn, err := connx.WrapperTCP("tcp", addr, 5*time.Second)
+	conn, err := proxy.WrapperTCP("tcp", addr, 5*time.Second)
 	if err == nil {
 		defer conn.Close()
 		// Negotiate Protocol Request/判断是否有smb服务
@@ -41,18 +41,18 @@ func SmbOsDiscoveryScan(addr string) (string, error) {
 		}
 
 		if len(res) <= 45 {
-			return utils.Byte.IsPrintableInfo(res), nil
+			return strutils.IsPrintableInfo(res), nil
 		}
 		sessionResponseContent := res[36:]
 		if len(sessionResponseContent) < 4 {
-			return utils.Byte.IsPrintableInfo(res), nil
+			return strutils.IsPrintableInfo(res), nil
 		}
 		securityBlobLength := lib.BytesToInt(append([]byte{}, sessionResponseContent[8], sessionResponseContent[7]))
 
 		//securityBlobContent := res[47 : 47+securityBlobLength]
 
 		if securityBlobLength+47 > len(res) {
-			return utils.Byte.IsPrintableInfo(res), nil
+			return strutils.IsPrintableInfo(res), nil
 		}
 		res = res[47+securityBlobLength:]
 		var nativeOs string

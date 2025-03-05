@@ -3,7 +3,7 @@ package task
 import (
 	"fmt"
 	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/utils/color"
+	"github.com/polite007/Milkyway/pkg/color"
 	"github.com/polite007/Milkyway/pkg/logger"
 	"github.com/polite007/Milkyway/pkg/neutron/templates"
 )
@@ -13,8 +13,8 @@ type PocTask struct {
 	TargetUrl string
 }
 
-// WebPocVulScan 下发url+poc的漏洞扫描任务
-func NewWebPocVulScan(pocTask []*PocTask) error {
+// newWebPocVulScan 下发url+poc的漏洞扫描任务
+func newWebPocVulScan(pocTask []*PocTask) error {
 	NewPool := NewWorkPool(config.Get().WorkPoolNum)
 	NewPool.Start()
 
@@ -36,7 +36,7 @@ func NewWebPocVulScan(pocTask []*PocTask) error {
 	go func() {
 		for _, poc := range pocTask {
 			NewPool.Wg.Add(1)
-			NewPool.TaskQueue <- NewTask(poc, f)
+			NewPool.TaskQueue <- newTask(poc, f)
 		}
 		close(NewPool.TaskQueue) // 关闭任务队列
 		NewPool.Wg.Wait()        // 等待消费者执行完全部任务

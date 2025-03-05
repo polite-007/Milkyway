@@ -1,4 +1,4 @@
-package utils
+package strutils
 
 import (
 	"encoding/json"

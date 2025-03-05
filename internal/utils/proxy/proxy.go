@@ -1,4 +1,4 @@
-package connx
+package proxy
 
 import (
 	"errors"
@@ -34,6 +34,7 @@ func WrapperTCP(network, address string, timeout time.Duration) (net.Conn, error
 	return conn, nil
 }
 
+// Socks5Dailer 获取一个socks5代理
 func Socks5Dailer(forward *net.Dialer) (proxy.Dialer, error) {
 	configs := config.Get()
 	u, err := url.Parse(configs.Socks5Proxy)

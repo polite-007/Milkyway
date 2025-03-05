@@ -3,10 +3,10 @@ package cli
 import (
 	"fmt"
 	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/service/httpx"
 	"github.com/polite007/Milkyway/internal/service/initpak"
-	utils "github.com/polite007/Milkyway/internal/utils"
 	"github.com/polite007/Milkyway/internal/utils/fofa"
+	"github.com/polite007/Milkyway/pkg/fileutils"
+	"github.com/polite007/Milkyway/pkg/strutils"
 	"github.com/spf13/cobra"
 	"os"
 	"strings"
@@ -14,27 +14,34 @@ import (
 
 func ParseTarget() ([]string, []string, error) {
 	var (
-		list    []string
-		ipList  []string
-		urlList []string
-		err     error
+		configs  = config.Get()
+		errors   = config.GetErrors()
+		fofaCore = fofa.GetFofaCore(configs.FofaKey)
+		list     []string
+		ipList   []string
+		urlList  []string
+		err      error
 	)
-	if fofa.FofaKey != "" && config.Get().FofaQuery != "" {
-		fmt.Printf("正在使用从fofa获取目标。。。 fofa query: %s\n", config.Get().FofaQuery)
-		ipList, err = fofa.StatsIP(config.Get().FofaQuery)
+	if configs.FofaQuery != "" {
+		if fofaCore.FofaKey == "" {
+			panic("fofa_key为空或者不可用")
+		}
+		fmt.Printf("正在使用从fofa获取目标... \nfofa query: %s\n", config.Get().FofaQuery)
+		fmt.Printf("你的fofa_key: %s", fofaCore.FofaKey)
+		ipList, err = fofaCore.StatsIP(configs.FofaQuery, configs.FofaSize)
 		if err != nil {
 			return nil, nil, err
 		}
 		return ipList, nil, err
 	}
 
-	if config.Get().TargetFile != "" {
-		list, err = utils.File.ReadLines(config.Get().TargetFile)
+	if configs.TargetFile != "" {
+		list, err = fileutils.ReadLines(configs.TargetFile)
 		if err != nil {
 			return nil, nil, err
 		}
 		for _, ip := range list {
-			result, ok := utils.IsDomain(ip)
+			result, ok := strutils.IsDomain(ip)
 			if ok {
 				urlList = append(urlList, result...)
 			} else {
@@ -42,16 +49,16 @@ func ParseTarget() ([]string, []string, error) {
 				if err != nil {
 					return nil, nil, err
 				}
-				ipList = utils.UniqueAppend(ipList, ipListSimple...)
+				ipList = strutils.UniqueAppend(ipList, ipListSimple...)
 			}
 		}
 		return ipList, urlList, nil
 	}
 
-	if config.Get().TargetUrl != "" {
-		urlListRaw := strings.Split(config.Get().TargetUrl, ",")
+	if configs.TargetUrl != "" {
+		urlListRaw := strings.Split(configs.TargetUrl, ",")
 		for _, urlSimple := range urlListRaw {
-			result, ok := utils.IsDomain(urlSimple)
+			result, ok := strutils.IsDomain(urlSimple)
 			if ok {
 				urlList = append(urlList, result...)
 			}
@@ -59,15 +66,15 @@ func ParseTarget() ([]string, []string, error) {
 		return nil, urlList, nil
 	}
 
-	if config.Get().Target != "" {
-		ipList, err = ParseStr(config.Get().Target)
+	if configs.Target != "" {
+		ipList, err = ParseStr(configs.Target)
 		if err != nil {
 			return nil, nil, err
 		}
 		return ipList, nil, nil
 	}
 
-	return nil, nil, config.GetErrors().ErrTargetEmpty
+	return nil, nil, errors.ErrTargetEmpty
 }
 
 func ParseArgs(cmd *cobra.Command) error {
@@ -81,10 +88,10 @@ func ParseArgs(cmd *cobra.Command) error {
 	if configs.FingerFile, err = cmd.Flags().GetString("finger-file"); err != nil {
 		return err
 	}
-	if fofa.FofaKey, err = cmd.Flags().GetString("fofa-key"); err != nil {
+	if configs.FofaKey, err = cmd.Flags().GetString("fofa-key"); err != nil {
 		return err
 	}
-	fofa.FofaSize, err = cmd.Flags().GetInt("fofa-size")
+	configs.FofaSize, err = cmd.Flags().GetInt("fofa-size")
 	if err != nil {
 		return err
 	}
@@ -165,69 +172,12 @@ func ParseArgs(cmd *cobra.Command) error {
 	case "default":
 		configs.Port = config.PortDefault
 	}
-	if err = initHttpProxy(); err != nil {
+	// 初始化httpx代理
+	if err = initpak.InitHttpProxy(); err != nil {
 		return err
 	}
-	if fofa.FofaKey == "" {
-		fofa.FofaKey = os.Getenv("FOFA_KEY")
+	if configs.FofaKey == "" {
+		configs.FofaKey = os.Getenv("FOFA_KEY")
 	}
 	return nil
-}
-
-func CheckProxy() string {
-	configs := config.Get()
-	if configs.Socks5Proxy == "" && configs.HttpProxy == "" {
-		return ""
-	}
-	if configs.Socks5Proxy != "" {
-		return "socks5"
-	}
-
-	if configs.HttpProxy != "" {
-		return "http"
-	}
-	return ""
-}
-
-func initHttpProxy() error {
-	configs := config.Get()
-	if configs.Socks5Proxy != "" {
-		return httpx.WithProxy(configs.Socks5Proxy)
-	}
-	if configs.HttpProxy != "" {
-		return httpx.WithProxy(configs.HttpProxy)
-	}
-	return nil
-}
-
-func InitPoc() {
-	fmt.Printf("[*] 初始化poc库\n")
-	err := initpak.InitNucleiPocList() // 初始化poc
-	if err != nil {
-		panic(err)
-	}
-	initpak.InitNculeiProxy()
-}
-
-func PrintDefaultUsage() {
-	fmt.Println(config.Logo)
-	fmt.Println("---------------GettingTarget----------")
-	fmt.Println("---------------Config-----------------")
-	fmt.Printf("threads: %d\n", config.Get().WorkPoolNum)
-	fmt.Printf("no-ping: %t\n", config.Get().NoPing)
-	if config.Get().OutputFileName != "" {
-		fmt.Printf("output file: %s\n", config.Get().OutputFileName)
-	} else {
-		fmt.Printf("output file: %s\n", "Null")
-	}
-	if config.Get().Socks5Proxy == "" && config.Get().HttpProxy == "" {
-		fmt.Printf("proxy addr: %s\n", "Null")
-	}
-	if config.Get().HttpProxy != "" {
-		fmt.Printf("proxy addr: %s\n", config.Get().HttpProxy)
-	}
-	if config.Get().Socks5Proxy != "" {
-		fmt.Printf("proxy addr: %s\n", config.Get().Socks5Proxy)
-	}
-	fmt.Printf("scan-random: %t\n", config.Get().ScanRandom)
 }

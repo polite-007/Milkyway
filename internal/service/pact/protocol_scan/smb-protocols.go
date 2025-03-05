@@ -3,8 +3,8 @@ package protocol_scan
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/polite007/Milkyway/internal/service/connx"
 	"github.com/polite007/Milkyway/internal/service/pact/protocol_scan/lib"
+	"github.com/polite007/Milkyway/internal/utils/proxy"
 	"net"
 	"strings"
 	"time"
@@ -29,7 +29,7 @@ func SmbProtocolScan(addr string) (string, error) {
 	}
 	var versionListArray = []string{"2.0.2", "2.1.0", "3.0.0", "3.0.2", "3.1.1"}
 	// Negotiate Protocol Request/判断是否有smb服务以及smb版本
-	conn, err := connx.WrapperTCP("tcp", addr, 5*time.Second)
+	conn, err := proxy.WrapperTCP("tcp", addr, 5*time.Second)
 	if err == nil {
 		defer conn.Close()
 		payloadAll, _ := hex.DecodeString(payloadListMap["all"])

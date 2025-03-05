@@ -2,9 +2,9 @@ package protocol_scan
 
 import (
 	"fmt"
-	"github.com/polite007/Milkyway/internal/service/connx"
 	"github.com/polite007/Milkyway/internal/service/pact/protocol_scan/lib"
-	"github.com/polite007/Milkyway/internal/utils"
+	"github.com/polite007/Milkyway/internal/utils/proxy"
+	"github.com/polite007/Milkyway/pkg/strutils"
 	"strconv"
 	"strings"
 	"time"
@@ -67,8 +67,8 @@ func LdapRootDseScan(addr string) (string, error) {
 			numberOne, _ = strconv.Atoi(fmt.Sprintf("%x", data[1]))
 			if numberOne >= 81 && numberOne <= 89 {
 
-				numberTwo := utils.Byte.BytesToInt(data[2 : numberOne-78])
-				Value := utils.Byte.IsPrintableInfo(data[numberOne-78 : numberTwo+numberOne-78])
+				numberTwo := strutils.BytesToInt(data[2 : numberOne-78])
+				Value := strutils.IsPrintableInfo(data[numberOne-78 : numberTwo+numberOne-78])
 				if len(data) >= numberTwo+numberOne-78 {
 					data = data[numberTwo+numberOne-78:]
 				} else {
@@ -118,7 +118,7 @@ func LdapRootDseScan(addr string) (string, error) {
 	var result string
 
 	// 尝试TCP连接
-	conn, err := connx.WrapperTCP("tcp", addr, 5*time.Second)
+	conn, err := proxy.WrapperTCP("tcp", addr, 5*time.Second)
 	if err != nil {
 		return "", err
 	}

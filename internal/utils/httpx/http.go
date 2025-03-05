@@ -22,7 +22,7 @@ var (
 	}
 )
 
-var Client = &http.Client{
+var client = &http.Client{
 	Transport: defaultTransport,
 	Timeout:   config.Get().WebScanTimeout,
 }
@@ -43,11 +43,11 @@ func Get(host string, header map[string]string, path string) (*http.Response, er
 	if err != nil {
 		return nil, fmt.Errorf("创建HTTP请求失败: %v", err)
 	}
-	req.Header.Set("User-Agent", GetRandomUserAgent())
+	req.Header.Set("User-Agent", getRandomUserAgent())
 	for i, v := range header {
 		req.Header.Set(i, v)
 	}
-	resp, err := Client.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("请求失败: %v", err)
 	}
@@ -59,11 +59,11 @@ func Post(host string, header map[string]string, path string, body string) (*htt
 	if err != nil {
 		return nil, fmt.Errorf("创建HTTP请求失败: %v", err)
 	}
-	req.Header.Set("User-Agent", GetRandomUserAgent())
+	req.Header.Set("User-Agent", getRandomUserAgent())
 	for i, v := range header {
 		req.Header.Set(i, v)
 	}
-	resp, err := Client.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("请求失败: %v", err)
 	}
@@ -75,11 +75,11 @@ func Put(host string, header map[string]string, path string, body string) (*http
 	if err != nil {
 		return nil, fmt.Errorf("创建HTTP请求失败: %v", err)
 	}
-	req.Header.Set("User-Agent", GetRandomUserAgent())
+	req.Header.Set("User-Agent", getRandomUserAgent())
 	for i, v := range header {
 		req.Header.Set(i, v)
 	}
-	resp, err := Client.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("请求失败: %v", err)
 	}

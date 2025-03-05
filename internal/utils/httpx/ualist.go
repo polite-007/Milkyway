@@ -832,7 +832,7 @@ var userAgents = []string{
 	"Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.0.5) Gecko/2008121711 Ubuntu/9.04 (jaunty) Firefox/3.0.5",
 }
 
-func GetRandomUserAgent() string {
+func getRandomUserAgent() string {
 	n := rand.Intn(len(userAgents))
 	return userAgents[n]
 }

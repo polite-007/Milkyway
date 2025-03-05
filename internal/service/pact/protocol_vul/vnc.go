@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/mitchellh/go-vnc"
 	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/service/connx"
-	"github.com/polite007/Milkyway/internal/utils/color"
+	"github.com/polite007/Milkyway/internal/utils/proxy"
+	"github.com/polite007/Milkyway/pkg/color"
 	"github.com/polite007/Milkyway/pkg/logger"
 )
 
@@ -17,7 +17,7 @@ func vncConn(ip string, port int, pass string) error {
 			},
 		},
 	}
-	conn, err := connx.WrapperTCP("tcp", fmt.Sprintf("%s:%v", ip, port), config.Get().PortScanTimeout)
+	conn, err := proxy.WrapperTCP("tcp", fmt.Sprintf("%s:%v", ip, port), config.Get().PortScanTimeout)
 	if err != nil {
 		return err
 	}

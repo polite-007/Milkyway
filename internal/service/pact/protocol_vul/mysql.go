@@ -7,8 +7,8 @@ import (
 	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/service/connx"
-	"github.com/polite007/Milkyway/internal/utils/color"
+	"github.com/polite007/Milkyway/internal/utils/proxy"
+	"github.com/polite007/Milkyway/pkg/color"
 	"github.com/polite007/Milkyway/pkg/logger"
 	"net"
 	"time"
@@ -16,7 +16,7 @@ import (
 
 func mysqlConn(ip string, port int, user, pass string) error {
 	mysql.RegisterDialContext("socks", func(ctx context.Context, addr string) (net.Conn, error) {
-		return connx.WrapperTCP("tcp", addr, 5*time.Second)
+		return proxy.WrapperTCP("tcp", addr, 5*time.Second)
 	})
 
 	Host, Port, Username, Password := ip, port, user, pass

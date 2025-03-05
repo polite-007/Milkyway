@@ -6,7 +6,7 @@ import (
 )
 
 // IPScanTask 返回存活的ip列表
-func NewIPScanTask(ipList []string) ([]string, error) {
+func newIPScanTask(ipList []string) ([]string, error) {
 	// 自定义消费者的内部函数
 	NewPool := NewWorkPool(config.Get().WorkPoolNum)
 	NewPool.Start()
@@ -27,7 +27,7 @@ func NewIPScanTask(ipList []string) ([]string, error) {
 	go func() {
 		for _, ip := range ipList {
 			NewPool.Wg.Add(1)
-			NewPool.TaskQueue <- NewTask(ip, f)
+			NewPool.TaskQueue <- newTask(ip, f)
 		}
 		close(NewPool.TaskQueue) // 关闭任务队列
 		NewPool.Wg.Wait()        // 等待消费者执行完全部任务

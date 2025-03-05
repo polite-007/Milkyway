@@ -3,12 +3,13 @@ package httpx
 import (
 	"errors"
 	"fmt"
-	proxy2 "github.com/polite007/Milkyway/internal/service/connx"
+	proxy2 "github.com/polite007/Milkyway/internal/utils/proxy"
 	"golang.org/x/net/proxy"
 	"net/http"
 	"net/url"
 )
 
+// WithProxy 为httpx库设置代理
 func WithProxy(strProxy string) error {
 	proxyURL, err := url.Parse(strProxy)
 	if err != nil {
@@ -17,7 +18,7 @@ func WithProxy(strProxy string) error {
 	switch proxyURL.Scheme {
 	case "http":
 		defaultTransport.Proxy = http.ProxyURL(proxyURL)
-		Client.Transport = defaultTransport
+		client.Transport = defaultTransport
 		//fmt.Println("Using HTTP proxy:", strProxy)
 		return nil
 	case "socks5":
@@ -27,7 +28,7 @@ func WithProxy(strProxy string) error {
 		}
 		if contextDialer, ok := socks5Proxy.(proxy.ContextDialer); ok {
 			defaultTransport.DialContext = contextDialer.DialContext
-			Client.Transport = defaultTransport
+			client.Transport = defaultTransport
 			//fmt.Println("Using SOCKS5 proxy:", strProxy)
 			return nil
 		} else {

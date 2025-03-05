@@ -1,11 +1,13 @@
-package utils
+package fileutils
 
 import (
 	"archive/zip"
 	"bufio"
 	"bytes"
+	"embed"
 	"fmt"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -13,16 +15,18 @@ import (
 	"time"
 )
 
-type fileService struct {
-}
-
 var (
-	mu   = new(sync.Mutex)
-	File = &fileService{}
+	mu = new(sync.Mutex)
 )
 
+// FileStruct 文件结构体
+type FileStruct struct {
+	Name    string
+	Content string
+}
+
 // ReadLines 读取文件
-func (f *fileService) ReadLines(filename string) ([]string, error) {
+func ReadLines(filename string) ([]string, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -38,14 +42,15 @@ func (f *fileService) ReadLines(filename string) ([]string, error) {
 		lines = append(lines, scanner.Text())
 	}
 
-	if err := scanner.Err(); err != nil {
+	if err = scanner.Err(); err != nil {
 		return nil, err
 	}
 
 	return lines, nil
 }
 
-func (f *fileService) Read(filename string) ([]byte, error) {
+// ReadByte 读取文件
+func ReadByte(filename string) ([]byte, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -63,7 +68,7 @@ func (f *fileService) Read(filename string) ([]byte, error) {
 }
 
 // WriteLines 写入文件
-func (f *fileService) WriteLines(filename string, lines []string, append bool) error {
+func WriteLines(filename string, lines []string, append bool) error {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -93,7 +98,7 @@ func (f *fileService) WriteLines(filename string, lines []string, append bool) e
 	return writer.Flush()
 }
 
-func (f *fileService) Write(filename string, content string, append bool) error {
+func WriteString(filename string, content string, append bool) error {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -118,22 +123,8 @@ func (f *fileService) Write(filename string, content string, append bool) error 
 	return writer.Flush()
 }
 
-// UniqueStrings 去重
-func (f *fileService) UniqueStrings(slice []string) []string {
-	seen := make(map[string]struct{}) // 使用空结构体来节省内存
-
-	result := []string{}
-	for _, value := range slice {
-		if _, exists := seen[value]; !exists {
-			seen[value] = struct{}{}
-			result = append(result, value)
-		}
-	}
-	return result
-}
-
 // CreateZipStream 创建zip文件流
-func (z *fileService) CreateZipStream(fileName, Content string) ([]byte, error) {
+func CreateZipStream(fileName, Content string) ([]byte, error) {
 	var buffer bytes.Buffer
 	zipWriter := zip.NewWriter(&buffer)
 	fileContent := []byte(Content)
@@ -159,20 +150,15 @@ func (z *fileService) CreateZipStream(fileName, Content string) ([]byte, error) 
 	return buffer.Bytes(), nil
 }
 
-type fileStruct struct {
-	name    string
-	content string
-}
-
 // ReadFileFromZipStream 从zip流读取到zip里的文件名和文件内容
-func (z *fileService) ReadFileFromZipStream(content []byte) ([]*fileStruct, error) {
+func ReadFileFromZipStream(content []byte) ([]*FileStruct, error) {
 	r := bytes.NewReader(content)
 	// 打开ZIP文件
 	zr, err := zip.NewReader(r, int64(len(content)))
 	if err != nil {
 		return nil, err
 	}
-	var files []*fileStruct
+	var files []*FileStruct
 	for _, f := range zr.File {
 		// 打开文件
 		rc, err := f.Open()
@@ -181,15 +167,15 @@ func (z *fileService) ReadFileFromZipStream(content []byte) ([]*fileStruct, erro
 		}
 		defer rc.Close()
 
-		file := &fileStruct{
-			name: f.Name,
+		file := &FileStruct{
+			Name: f.Name,
 		}
 		// 读取文件内容
 		data, err := io.ReadAll(rc)
 		if err != nil {
 			return nil, err
 		}
-		file.content = string(data)
+		file.Content = string(data)
 		files = append(files, file)
 	}
 	return files, nil
@@ -222,4 +208,40 @@ func ReadFilesFromDir(dirPath string) ([][]byte, error) {
 		return nil, fmt.Errorf("failed to walk through directory: %w", err)
 	}
 	return filesData, nil
+}
+
+// ReadFilesFromEmbedFs 从嵌入的目录中读取所有文件
+func ReadFilesFromEmbedFs(embedFs embed.FS, dir string) ([][]byte, error) {
+	var allFilesContent [][]byte
+	// 遍历嵌入的目录
+	err := fs.WalkDir(embedFs, dir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err // 遍历时出错
+		}
+		if !d.IsDir() { // 如果是文件
+			data, err := embedFs.ReadFile(path) // 读取文件内容
+			if err != nil {
+				return err
+			}
+			allFilesContent = append(allFilesContent, data) // 添加到结果中
+		}
+		return nil
+	})
+	return allFilesContent, err
+}
+
+func GenerateEmptyFile(filename string) error {
+	flag := os.O_WRONLY | os.O_CREATE | os.O_TRUNC
+	file, err := os.OpenFile(filename, flag, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// 验证文件是否创建成功
+	_, err = os.Stat(filename)
+	if err != nil {
+		return err
+	}
+	return nil
 }

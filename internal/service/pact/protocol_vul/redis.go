@@ -3,8 +3,8 @@ package protocol_vul
 import (
 	"fmt"
 	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/service/connx"
-	"github.com/polite007/Milkyway/internal/utils/color"
+	"github.com/polite007/Milkyway/internal/utils/proxy"
+	"github.com/polite007/Milkyway/pkg/color"
 	"github.com/polite007/Milkyway/pkg/logger"
 	"io"
 	"net"
@@ -60,7 +60,7 @@ func getconfig(conn net.Conn) (dbfilename string, dir string, err error) {
 
 func redisConn(ip string, port int, pass string) error {
 	realhost := fmt.Sprintf("%s:%v", ip, port)
-	conn, err := connx.WrapperTCP("tcp", realhost, config.PortScanTimeout)
+	conn, err := proxy.WrapperTCP("tcp", realhost, config.PortScanTimeout)
 	if err != nil {
 		return err
 	}
@@ -93,7 +93,7 @@ func redisConn(ip string, port int, pass string) error {
 
 func redisUnauth(ip string, port int) error {
 	realHost := fmt.Sprintf("%s:%v", ip, port)
-	conn, err := connx.WrapperTCP("tcp", realHost, config.PortScanTimeout)
+	conn, err := proxy.WrapperTCP("tcp", realHost, config.PortScanTimeout)
 	if err != nil {
 		return err
 	}

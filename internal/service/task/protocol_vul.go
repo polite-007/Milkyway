@@ -5,8 +5,8 @@ import (
 	"github.com/polite007/Milkyway/internal/service/pact/protocol_vul"
 )
 
-// ProtocolVulScan 对ip+port+protocol进行对应的协议漏洞扫描
-func NewProtocolVulScan(ipPortList map[string][]*config.PortProtocol) error {
+// newProtocolVulScan 对ip+port+protocol进行对应的协议漏洞扫描
+func newProtocolVulScan(ipPortList map[string][]*config.PortProtocol) error {
 	NewPool := NewWorkPool(config.Get().WorkPoolNum)
 	NewPool.Start()
 
@@ -24,7 +24,7 @@ func NewProtocolVulScan(ipPortList map[string][]*config.PortProtocol) error {
 			for _, portInfo := range ipInfo {
 				if portInfo.Protocol != "" {
 					NewPool.Wg.Add(1)
-					NewPool.TaskQueue <- NewTask(portInfo, f)
+					NewPool.TaskQueue <- newTask(portInfo, f)
 				}
 			}
 		}

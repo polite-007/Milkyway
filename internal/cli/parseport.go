@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"github.com/polite007/Milkyway/internal/utils"
+	"github.com/polite007/Milkyway/pkg/strutils"
 	"strconv"
 	"strings"
 )
@@ -42,6 +42,6 @@ func ParsePort(ports string) (scanPorts []int) {
 			scanPorts = append(scanPorts, i)
 		}
 	}
-	scanPorts = utils.RemoveDuplicateSliceInt(scanPorts)
+	scanPorts = strutils.RemoveDuplicateSliceInt(scanPorts)
 	return scanPorts
 }

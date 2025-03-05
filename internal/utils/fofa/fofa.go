@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"github.com/polite007/Milkyway/internal/utils"
+	"github.com/polite007/Milkyway/pkg/strutils"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -12,23 +12,22 @@ import (
 	"time"
 )
 
-var (
-	FofaSize int
-	FofaKey  string
-)
-
-type Pagination struct {
+type pagination struct {
 	PageNum  int `json:"page_num" form:"page_num"`
 	PageSize int `json:"page_size" form:"page_size"`
 }
 
-type FofaSearchConfig struct {
-	pg     *Pagination // 分页
+type FofaCore struct {
+	FofaKey string
+}
+
+type fofaSearchConfig struct {
+	pg     *pagination // 分页
 	isFull bool        // 是否获取全部，默认只一年内的数据
 	fields []string    // 返回字段
 }
 
-type HostResults struct {
+type hostResults struct {
 	Mode    string     `json:"mode"`
 	Error   bool       `json:"error"`
 	Errmsg  string     `json:"errmsg"`
@@ -39,20 +38,24 @@ type HostResults struct {
 	Next    string     `json:"next"`
 }
 
-var (
-	DumpFofaFields = []string{
-		"ip",
-		"port",
-	}
-)
+var fofaCore *FofaCore
 
-func NewFofaSearchConfig(opts ...func(*FofaSearchConfig)) *FofaSearchConfig {
-	cfg := &FofaSearchConfig{
-		pg: &Pagination{
+func GetFofaCore(fofaKey string) *FofaCore {
+	if fofaCore == nil {
+		fofaCore = &FofaCore{
+			FofaKey: fofaKey,
+		}
+	}
+	return fofaCore
+}
+
+func newFofaSearchConfig(opts ...func(*fofaSearchConfig)) *fofaSearchConfig {
+	cfg := &fofaSearchConfig{
+		pg: &pagination{
 			PageNum:  1,
 			PageSize: 10,
 		},
-		fields: DumpFofaFields,
+		fields: []string{"ip", "port"},
 	}
 	for _, opt := range opts {
 		opt(cfg)
@@ -64,19 +67,19 @@ func NewFofaSearchConfig(opts ...func(*FofaSearchConfig)) *FofaSearchConfig {
 	return cfg
 }
 
-func WithFields(fields []string) func(*FofaSearchConfig) {
-	return func(cfg *FofaSearchConfig) {
+func withFields(fields []string) func(*fofaSearchConfig) {
+	return func(cfg *fofaSearchConfig) {
 		cfg.fields = fields
 	}
 }
 
-func WithPagination(pg *Pagination) func(*FofaSearchConfig) {
-	return func(cfg *FofaSearchConfig) {
+func withPagination(pg *pagination) func(*fofaSearchConfig) {
+	return func(cfg *fofaSearchConfig) {
 		cfg.pg = pg
 	}
 }
 
-func (hr *HostResults) GetIPs() []string {
+func (hr *hostResults) getIPs() []string {
 	var ips []string
 	for _, res := range hr.Results {
 		ips = append(ips, res[0])
@@ -84,7 +87,7 @@ func (hr *HostResults) GetIPs() []string {
 	return ips
 }
 
-func Search(fofaQuery string, cfg *FofaSearchConfig) (*HostResults, error) {
+func (f *FofaCore) search(fofaQuery string, cfg *fofaSearchConfig) (*hostResults, error) {
 	params := url.Values{}
 	params.Set("qbase64", base64.StdEncoding.EncodeToString([]byte(fofaQuery)))
 	params.Set("fields", strings.Join(cfg.fields, ","))
@@ -93,7 +96,7 @@ func Search(fofaQuery string, cfg *FofaSearchConfig) (*HostResults, error) {
 	if cfg.isFull {
 		params.Add("full", "true")
 	}
-	params.Set("key", FofaKey)
+	params.Set("key", f.FofaKey)
 
 	urlStr := "https://fofa.info/api/v1/search/all" + "?" + params.Encode()
 	req, err := http.NewRequest(http.MethodGet, urlStr, nil)
@@ -112,7 +115,7 @@ func Search(fofaQuery string, cfg *FofaSearchConfig) (*HostResults, error) {
 	}
 	defer resp.Body.Close()
 
-	var result HostResults
+	var result hostResults
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
 	}
@@ -137,26 +140,25 @@ func isFofaErrorNeedPanic(errMsg string) error {
 	return errors.New(errMsg)
 }
 
-func StatsIP(fofaQuery string) ([]string, error) {
-	// 基本配置
-	fofasize := 1000
-	if FofaSize <= 1000 {
-		fofasize = FofaSize
+func (f *FofaCore) StatsIP(fofaQuery string, size int) ([]string, error) {
+	if size == 0 {
+		// 默认查询1000条
+		size = 1000
 	}
-	pg := &Pagination{
+	pg := &pagination{
 		PageNum:  1,
-		PageSize: fofasize,
+		PageSize: size,
 	}
-	baseOpts := []func(*FofaSearchConfig){
-		WithFields([]string{"ip", "port"}),
-		WithPagination(pg),
+	baseOpts := []func(*fofaSearchConfig){
+		withFields([]string{"ip", "port"}),
+		withPagination(pg),
 	}
 
 	var IPs []string
 	for {
 		time.Sleep(500 * time.Millisecond)
-		cfg := NewFofaSearchConfig(baseOpts...)
-		hr, err := Search(fofaQuery, cfg)
+		cfg := newFofaSearchConfig(baseOpts...)
+		hr, err := f.search(fofaQuery, cfg)
 		if err != nil {
 			continue
 		}
@@ -170,8 +172,8 @@ func StatsIP(fofaQuery string) ([]string, error) {
 			break
 		}
 
-		IPs = append(IPs, hr.GetIPs()...)
-		if len(IPs) >= FofaSize {
+		IPs = append(IPs, hr.getIPs()...)
+		if len(IPs) >= size {
 			break
 		}
 		time.Sleep(500 * time.Millisecond)
@@ -182,10 +184,10 @@ func StatsIP(fofaQuery string) ([]string, error) {
 
 		// 继续查询
 		pg.PageNum++
-		baseOpts = []func(*FofaSearchConfig){
-			WithFields([]string{"ip", "port"}),
-			WithPagination(pg),
+		baseOpts = []func(*fofaSearchConfig){
+			withFields([]string{"ip", "port"}),
+			withPagination(pg),
 		}
 	}
-	return utils.RemoveDuplicateSliceString(IPs), nil
+	return strutils.RemoveDuplicateSliceString(IPs), nil
 }

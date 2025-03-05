@@ -75,13 +75,13 @@ func favicohash(host string) string {
 			//log.Println("favicon file read error: ", err)
 			return "0"
 		}
-		return Mmh3Hash32(StandBase64(body))
+		return mmh3Hash32(standBase64(body))
 	} else {
 		return "0"
 	}
 }
 
-func Mmh3Hash32(raw []byte) string {
+func mmh3Hash32(raw []byte) string {
 	var h32 hash.Hash32 = murmur3.New32()
 	_, err := h32.Write([]byte(raw))
 	if err == nil {
@@ -92,7 +92,7 @@ func Mmh3Hash32(raw []byte) string {
 	}
 }
 
-func StandBase64(braw []byte) []byte {
+func standBase64(braw []byte) []byte {
 	bckd := base64.StdEncoding.EncodeToString(braw)
 	var buffer bytes.Buffer
 	for i := 0; i < len(bckd); i++ {

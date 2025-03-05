@@ -3,15 +3,15 @@ package task
 import (
 	"fmt"
 	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/service/finger"
-	"github.com/polite007/Milkyway/internal/service/httpx"
-	"github.com/polite007/Milkyway/internal/utils"
-	"github.com/polite007/Milkyway/internal/utils/color"
+	"github.com/polite007/Milkyway/internal/utils/finger"
+	"github.com/polite007/Milkyway/internal/utils/httpx"
+	"github.com/polite007/Milkyway/pkg/color"
 	"github.com/polite007/Milkyway/pkg/logger"
+	"github.com/polite007/Milkyway/pkg/strutils"
 )
 
-// NewWebScanTask
-func NewWebScanTask(ipPortList map[string][]*config.PortProtocol) (map[string][]*config.PortProtocol, []*httpx.Resps, error) {
+// newWebScanTask
+func newWebScanTask(ipPortList map[string][]*config.PortProtocol) (map[string][]*config.PortProtocol, []*httpx.Resps, error) {
 	NewPool := NewWorkPool(config.Get().WorkPoolNum)
 	NewPool.Start()
 
@@ -44,7 +44,7 @@ func NewWebScanTask(ipPortList map[string][]*config.PortProtocol) (map[string][]
 					continue
 				}
 				NewPool.Wg.Add(1)
-				NewPool.TaskQueue <- NewTask(&Addr{
+				NewPool.TaskQueue <- newTask(&Addr{
 					host: host,
 					port: port.Port,
 				}, f)
@@ -60,7 +60,7 @@ func NewWebScanTask(ipPortList map[string][]*config.PortProtocol) (map[string][]
 			continue
 		}
 		resultSimple := res.(*httpx.Resps)
-		ip, port := utils.SplitHost(resultSimple.Url.Host)
+		ip, port := strutils.SplitHost(resultSimple.Url.Host)
 		ipPortListNew[ip] = append(ipPortListNew[ip], &config.PortProtocol{
 			IP:       ip,
 			Port:     port,
@@ -90,13 +90,13 @@ func NewWebScanTask(ipPortList map[string][]*config.PortProtocol) (map[string][]
 		result = append(result, resultSimple)
 	}
 	// 合并两个map
-	ipPortListNew = MergeMaps(ipPortList, ipPortListNew)
+	ipPortListNew = mergeMaps(ipPortList, ipPortListNew)
 
 	return ipPortListNew, result, nil
 }
 
-// MergeMaps 合并两个map,m2存在的会覆盖m1
-func MergeMaps(m1, m2 map[string][]*config.PortProtocol) map[string][]*config.PortProtocol {
+// mergeMaps 合并两个map,m2存在的会覆盖m1
+func mergeMaps(m1, m2 map[string][]*config.PortProtocol) map[string][]*config.PortProtocol {
 	result := make(map[string][]*config.PortProtocol)
 	for k, v := range m1 {
 		result[k] = v

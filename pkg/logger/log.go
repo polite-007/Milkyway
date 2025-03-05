@@ -2,22 +2,29 @@ package logger
 
 import (
 	"fmt"
-	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/utils"
-	"github.com/polite007/Milkyway/internal/utils/color"
+	"github.com/polite007/Milkyway/pkg/color"
+	"github.com/polite007/Milkyway/pkg/fileutils"
 	"io"
 	"log"
 	"sync"
 )
 
+// 用法
+// 1：调用 OutLog(result)
+// 2：日志导入完毕，调用 LogWaitGroup.Wait()
+
 var (
+	// external variables
 	LogWaitGroup sync.WaitGroup
-	logChan      = make(chan *string, 1500)
+	LogName      = "log.txt" // default log.txt
+
+	// internal variables
+	logChan = make(chan *string, 1500)
 )
 
 func init() {
 	log.SetOutput(io.Discard)
-	go saveLog()
+	go saveLog(LogName)
 }
 
 func OutLog(result string) {
@@ -28,10 +35,10 @@ func OutLog(result string) {
 	}
 }
 
-func saveLog() {
+func saveLog(logName string) {
 	for logout := range logChan {
 		logOutStr := *logout
-		_ = utils.File.Write(config.Get().OutputFileName, color.RemoveColor(logOutStr), true)
+		_ = fileutils.WriteString(logName, color.RemoveColor(logOutStr), true)
 		LogWaitGroup.Done()
 	}
 }

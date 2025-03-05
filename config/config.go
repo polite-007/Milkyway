@@ -2,9 +2,17 @@ package config
 
 import (
 	"errors"
-	"github.com/polite007/Milkyway/internal/utils/color"
+	"fmt"
 	"time"
 )
+
+type ErrorsList struct {
+	ErrAssertion          error
+	ErrTargetEmpty        error
+	ErrTaskFailed         error
+	ErrPortocolScanFailed error
+	ErrPortNotProtocol    error
+}
 
 type PortProtocol struct {
 	IP       string
@@ -24,6 +32,8 @@ type Application struct {
 	SshKey         string
 	Verbose        bool
 	FofaQuery      string
+	FofaSize       int
+	FofaKey        string
 	ScanRandom     bool
 	HttpProxy      string
 	Socks5Proxy    string
@@ -41,98 +51,6 @@ type Application struct {
 }
 
 var application *Application
-
-// Get 获取配置
-func Get() *Application {
-	if application != nil {
-		return application
-	}
-	application = &Application{
-		SC:                  sC,
-		PocId:               pocId,
-		PocTags:             pocTags,
-		FingerFile:          fingerFile,
-		FingerMatch:         fingerMatch,
-		PocFile:             pocFile,
-		NoPing:              noPing,
-		FullScan:            fullScan,
-		SshKey:              sshKey,
-		Verbose:             verbose,
-		FofaQuery:           FofaQuery,
-		ScanRandom:          scanRandom,
-		HttpProxy:           httpProxy,
-		Socks5Proxy:         socks5Proxy,
-		Port:                port,
-		Target:              target,
-		TargetUrl:           targetUrl,
-		TargetFile:          targetFile,
-		OutputFileName:      outputFileName,
-		WorkPoolNum:         workPoolNum,
-		TLSHandshakeTimeout: 8 * time.Second,
-		WebScanTimeout:      10 * time.Second,
-		PortScanTimeout:     3 * time.Second,
-		ICMPTimeOut:         2 * time.Second,
-	}
-	return application
-}
-
-// 私有全局变量
-var (
-	sC             string
-	pocId          string
-	pocTags        string
-	fingerMatch    bool
-	fingerFile     string
-	pocFile        string
-	noPing         bool
-	fullScan       bool
-	sshKey         string
-	verbose        bool
-	FofaQuery      string
-	scanRandom     bool
-	httpProxy      string
-	socks5Proxy    string
-	port           string
-	target         string
-	targetUrl      string
-	targetFile     string
-	outputFileName string
-	workPoolNum    int
-
-	PortScanTimeout = 3 * time.Second
-)
-
-type ErrorsList struct {
-	ErrAssertion          error
-	ErrTargetEmpty        error
-	ErrTaskFailed         error
-	ErrPortocolScanFailed error
-	ErrPortNotProtocol    error
-}
-
-// 错误
-var (
-	Errors                *ErrorsList
-	errAssertion          = errors.New("工人函数断言错误")
-	errTargetEmpty        = errors.New("目标为空")
-	errTaskFailed         = errors.New("任务执行失败")
-	errPortocolScanFailed = errors.New("全协议扫描失败")
-	errPortNotProtocol    = errors.New("端口号没有对应的协议")
-)
-
-func GetErrors() *ErrorsList {
-	if Errors != nil {
-		return Errors
-	}
-	Errors = &ErrorsList{
-		ErrAssertion:          errAssertion,
-		ErrTargetEmpty:        errTargetEmpty,
-		ErrTaskFailed:         errTaskFailed,
-		ErrPortocolScanFailed: errPortocolScanFailed,
-		ErrPortNotProtocol:    errPortNotProtocol,
-	}
-	return Errors
-}
 
 // 端口
 var (
@@ -165,23 +83,120 @@ var (
 	}
 )
 
+// 错误
 var (
-	Version = "milkyway version: 0.0.8"
+	Errors                *ErrorsList
+	errAssertion          = errors.New("工人函数断言错误")
+	errTargetEmpty        = errors.New("目标为空")
+	errTaskFailed         = errors.New("任务执行失败")
+	errPortocolScanFailed = errors.New("全协议扫描失败")
+	errPortNotProtocol    = errors.New("端口号没有对应的协议")
 )
 
+// 私有全局变量
 var (
-	Logo = color.Yellow(`
-           _ _ _                              
- _ __ ___ (_) | | ___   ___      ____ _ _   _ 
-| '_ ' _ \| | | |/ / | | \ \ /\ / / _'' | | | |
-| | | | | | | |   <| |_| |\ V  V / (_| | |_| |
-|_| |_| |_|_|_|_|\_\\__, | \_/\_/ \__,_|\__, |
-                    |___/               |___/ 
-`+
-		"\n                                 ") + Version + "\n" + "--------------------------------------\n" +
-		"https://github.com/polite-007/Milkyway\n" + "--------------------------------------"
+	sC             string
+	pocId          string
+	pocTags        string
+	fingerMatch    bool
+	fingerFile     string
+	pocFile        string
+	noPing         bool
+	fullScan       bool
+	sshKey         string
+	verbose        bool
+	FofaQuery      string
+	FofaSize       int
+	FofaKey        string
+	scanRandom     bool
+	httpProxy      string
+	socks5Proxy    string
+	port           string
+	target         string
+	targetUrl      string
+	targetFile     string
+	outputFileName string
+	workPoolNum    int
+
+	PortScanTimeout = 3 * time.Second
 )
 
-var (
-	Name = "Milkyway"
-)
+// Get 获取配置
+func Get() *Application {
+	if application != nil {
+		return application
+	}
+	application = &Application{
+		SC:                  sC,
+		PocId:               pocId,
+		PocTags:             pocTags,
+		FingerFile:          fingerFile,
+		FingerMatch:         fingerMatch,
+		PocFile:             pocFile,
+		NoPing:              noPing,
+		FullScan:            fullScan,
+		SshKey:              sshKey,
+		Verbose:             verbose,
+		FofaQuery:           FofaQuery,
+		FofaSize:            FofaSize,
+		FofaKey:             FofaKey,
+		ScanRandom:          scanRandom,
+		HttpProxy:           httpProxy,
+		Socks5Proxy:         socks5Proxy,
+		Port:                port,
+		Target:              target,
+		TargetUrl:           targetUrl,
+		TargetFile:          targetFile,
+		OutputFileName:      outputFileName,
+		WorkPoolNum:         workPoolNum,
+		TLSHandshakeTimeout: 8 * time.Second,
+		WebScanTimeout:      10 * time.Second,
+		PortScanTimeout:     3 * time.Second,
+		ICMPTimeOut:         2 * time.Second,
+	}
+	return application
+}
+
+func (c *Application) CheckProxy() bool {
+	if c.Socks5Proxy == "" && c.HttpProxy == "" {
+		return true
+	}
+	return false
+}
+
+func (c *Application) PrintDefaultUsage() {
+	fmt.Println(Logo)
+	fmt.Println("---------------GettingTarget----------")
+	fmt.Println("---------------Config-----------------")
+	fmt.Printf("threads: %d\n", c.WorkPoolNum)
+	fmt.Printf("no-ping: %t\n", c.NoPing)
+	if c.OutputFileName != "" {
+		fmt.Printf("output file: %s\n", c.OutputFileName)
+	} else {
+		fmt.Printf("output file: %s\n", "Null")
+	}
+	if c.Socks5Proxy == "" && c.HttpProxy == "" {
+		fmt.Printf("proxy addr: %s\n", "Null")
+	}
+	if c.HttpProxy != "" {
+		fmt.Printf("proxy addr: %s\n", c.HttpProxy)
+	}
+	if c.Socks5Proxy != "" {
+		fmt.Printf("proxy addr: %s\n", c.Socks5Proxy)
+	}
+	fmt.Printf("scan-random: %t\n", c.ScanRandom)
+}
+
+func GetErrors() *ErrorsList {
+	if Errors != nil {
+		return Errors
+	}
+	Errors = &ErrorsList{
+		ErrAssertion:          errAssertion,
+		ErrTargetEmpty:        errTargetEmpty,
+		ErrTaskFailed:         errTaskFailed,
+		ErrPortocolScanFailed: errPortocolScanFailed,
+		ErrPortNotProtocol:    errPortNotProtocol,
+	}
+	return Errors
+}

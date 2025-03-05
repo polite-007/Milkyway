@@ -1,8 +1,8 @@
 package task
 
 import (
-	"fmt"
 	"github.com/polite007/Milkyway/config"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -22,7 +22,7 @@ func TestTask(t *testing.T) {
 	go func() { // 模拟生产者，获取到全部任务后，额外开一个协程进行任务提交
 		for i := 1; i <= 10000; i++ {
 			NewPool.Wg.Add(1)                  //
-			NewPool.TaskQueue <- NewTask(i, f) // 将任务放入任务队列
+			NewPool.TaskQueue <- newTask(i, f) // 将任务放入任务队列
 		}
 		close(NewPool.TaskQueue) // 关闭任务队列
 		NewPool.Wg.Wait()        // 等待消费者执行完全部任务
@@ -33,5 +33,5 @@ func TestTask(t *testing.T) {
 	for resultRaw := range NewPool.Result { // 读取结果
 		result += resultRaw.(int)
 	}
-	fmt.Println(result)
+	assert.Equal(t, 50005000, result)
 }

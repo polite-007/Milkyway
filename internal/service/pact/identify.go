@@ -3,9 +3,9 @@ package pact
 import (
 	"fmt"
 	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/service/connx"
 	"github.com/polite007/Milkyway/internal/service/pact/protocol_scan"
-	"github.com/polite007/Milkyway/internal/utils/color"
+	"github.com/polite007/Milkyway/internal/utils/proxy"
+	"github.com/polite007/Milkyway/pkg/color"
 	"github.com/polite007/Milkyway/pkg/logger"
 	"net"
 	"strings"
@@ -21,7 +21,7 @@ func PortScan(host string, port int, timeout time.Duration) (string, bool) {
 		result   string
 		protocol string
 	)
-	conn, err = connx.WrapperTCP("tcp4", fmt.Sprintf("%s:%v", host, port), timeout)
+	conn, err = proxy.WrapperTCP("tcp4", fmt.Sprintf("%s:%v", host, port), timeout)
 	if err == nil {
 		defer conn.Close()
 		protocol, result, err = protocolScan(host, port)

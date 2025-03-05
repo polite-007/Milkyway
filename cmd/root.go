@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"github.com/polite007/Milkyway/config"
 	"github.com/polite007/Milkyway/internal/cli"
-	"github.com/polite007/Milkyway/internal/service/httpx"
+	"github.com/polite007/Milkyway/internal/service/task"
+	"github.com/polite007/Milkyway/internal/utils/httpx"
 	"github.com/polite007/Milkyway/pkg/logger"
 	"github.com/spf13/cobra"
 	"os"
@@ -67,39 +68,40 @@ func RunRoot(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	// 打印默认信息
-	cli.PrintDefaultUsage()
-
-	// 开始全部任务
-	// 根据ip进行探测
+	config.Get().PrintDefaultUsage()
+	// 开始探测&识别任务
+	// 根据ip探测
 	timeNow := time.Now()
 	if len(ipList) != 0 {
-		IpActiveList, err = cli.IpActiveScan(ipList) // 探测存活IP&端口&端口协议识别
+		IpActiveList, err = task.IpActiveScan(ipList) // 探测存活IP&端口&端口协议识别
 		if err != nil {
 			return err
 		}
-		IpPortList, err = cli.PortActiveScan(IpActiveList)
+		IpPortList, err = task.PortActiveScan(IpActiveList)
 		if err != nil {
 			return err
 		}
-		IpPortList, WebListOne, err = cli.WebActiveScan(IpPortList) // 探测Web服务&返回有协议的ip/port列表
+		IpPortList, WebListOne, err = task.WebActiveScan(IpPortList) // 探测Web服务&返回有协议的ip/port列表
 		if err != nil {
 			return err
 		}
 	}
-	// 根据url进行探测
+	// 根据url探测
 	if len(urlList) != 0 {
-		WebListTwo, err = cli.WebScanWithDomain(urlList)
+		WebListTwo, err = task.WebScanWithDomain(urlList)
 		if err != nil {
 			return err
 		}
 	}
+
+	// 开启漏洞扫描
 	// 协议漏洞扫描
-	if err = cli.ProtocolVulScan(IpPortList); err != nil {
+	if err = task.ProtocolVulScan(IpPortList); err != nil {
 		return err
 	}
 	// web漏洞扫描
 	WebList = append(WebListTwo, WebListOne...)
-	if err = cli.WebPocVulScan(WebList); err != nil {
+	if err = task.WebPocVulScan(WebList); err != nil {
 		return err
 	}
 	// 等待所有日志写入
