@@ -152,7 +152,7 @@ func Get() *Application {
 }
 
 func (c *Application) CheckProxy() bool {
-	if c.Socks5Proxy == "" && c.HttpProxy == "" {
+	if c.Socks5Proxy != "" || c.HttpProxy != "" {
 		return true
 	}
 	return false
