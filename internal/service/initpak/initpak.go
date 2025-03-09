@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -65,11 +66,13 @@ func initNucleiPocList(dir string) error {
 		}
 	}
 
-	defer func() {
-		fmt.Printf("[*] 当前poc库漏洞数: %d\n", len(PocsList))
-	}()
+	fmt.Printf("[*] 当前poc库漏洞数: %d\n", len(pocFile))
 
 	if configs.PocId != "" {
+		var configsPocids sync.Map
+		for _, pocId := range strings.Split(configs.PocId, ",") {
+			configsPocids.Store(pocId, true)
+		}
 		for _, poc := range pocFile {
 			t := &templates.Template{}
 			err = yaml.Unmarshal(poc, t)
@@ -80,11 +83,11 @@ func initNucleiPocList(dir string) error {
 			if err != nil {
 				continue
 			}
-			if configs.PocId == t.Id {
+			if _, ok := configsPocids.Load(t.Id); ok {
 				PocsList = append(PocsList, t)
-				return nil
 			}
 		}
+		return nil
 	}
 
 	if configs.PocTags != "" {
@@ -106,6 +109,7 @@ func initNucleiPocList(dir string) error {
 		}
 		return nil
 	}
+
 	for _, poc := range pocFile {
 		t := &templates.Template{}
 		err = yaml.Unmarshal(poc, t)

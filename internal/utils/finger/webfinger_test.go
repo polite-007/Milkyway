@@ -56,7 +56,7 @@ func structToString(s AssetsInfo) string { // 创建一个缓冲区
 
 func Test_GetFinger(t *testing.T) {
 	initFingerFile()
-	fmt.Printf("指纹数量：%d", len(assets.Fingerprint))
+	fmt.Printf("指纹数量：%d\n", len(assets.Fingerprint))
 	// 新的finger
 	var assetsNew AssetsInfo
 	// 获取所有nuclei的poc标签
