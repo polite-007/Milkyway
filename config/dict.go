@@ -34,12 +34,12 @@ func GetDict() *Dict {
 
 var (
 	userMysql     = []string{"root", "admin"}
-	passwordMysql = []string{"", "root", "123456", "password", "qweasd", "QWE123qwe"}
+	passwordMysql = []string{"", "root", "123456", "password", "qweasd", "QWE123qwe", "qweasdzxc", "123qwe", "123QWE"}
 
-	passwordRedis = []string{"", "root", "123456", "password", "12345678", "redis"}
+	passwordRedis = []string{"", "root", "123456", "password", "12345678", "redis", "QWE123qwe"}
 
 	userSsh     = []string{"root", "myuser"}
-	passwordSsh = []string{"", "root", "123456", "password", "12345678", "mypassword"}
+	passwordSsh = []string{"", "root", "123456", "password", "12345678", "QWE123qwe", "mypassword", "123qwe", "123QWE"}
 
-	passwordVnc = []string{"", "root", "123456", "password", "12345678", "vnc"}
+	passwordVnc = []string{"", "root", "123456", "password", "12345678", "QWE123qwe", "vnc", "123qwe", "123QWE"}
 )
