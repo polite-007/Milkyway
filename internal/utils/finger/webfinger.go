@@ -16,12 +16,14 @@ type AssetsInfo struct {
 }
 
 type Fingerprint struct {
-	Cms      string
-	Method   string
-	Location string
-	Keyword  []string
-	Tag      []string
+	Cms      string   `json:"cms"`
+	Method   string   `json:"method"`
+	Location string   `json:"location"`
+	Keyword  []string `json:"keyword"`
+	Tag      []string `json:"tag"`
 }
+
+// 下面的代码是临时进行tags转换用的
 
 var (
 	once   sync.Once
@@ -29,7 +31,7 @@ var (
 )
 
 func initFingerFile() {
-	fingerFile := "finger/finger.json"
+	fingerFile := "finger/finger_new.json"
 	if config.Get().FingerFile != "" {
 		fingerFile = config.Get().FingerFile
 	}

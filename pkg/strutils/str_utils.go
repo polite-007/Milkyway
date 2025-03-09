@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 var (
@@ -124,4 +125,34 @@ func HasCommonElement(slice1 []string, slice2 []string) bool {
 		}
 	}
 	return false
+}
+
+// SplitChineseAndEnglish 将字符串按中文和英文字符分割
+func SplitChineseAndEnglish(input string) []string {
+	var result string
+	for i, char := range input {
+		// 判断当前字符是否为英文字符或数字
+		isEnglish := unicode.IsLetter(char) || unicode.IsDigit(char)
+		// 判断上一个字符是否为中文字符（如果有上一个字符）
+		prevIsChinese := i > 0 && unicode.Is(unicode.Han, rune(input[i-1]))
+
+		// 如果当前是英文字符，且上一个字符是中文字符，则在中间添加空格
+		if isEnglish && prevIsChinese {
+			result += " "
+		}
+
+		// 判断当前字符是否为中文字符
+		isChinese := unicode.Is(unicode.Han, char)
+		// 判断上一个字符是否为英文字符或数字（如果有上一个字符）
+		prevIsEnglish := i > 0 && (unicode.IsLetter(rune(input[i-1])) || unicode.IsDigit(rune(input[i-1])))
+
+		// 如果当前是中文字符，且上一个字符是英文字符或数字，则在中间添加空格
+		if isChinese && prevIsEnglish {
+			result += " "
+		}
+
+		// 将当前字符添加到结果中
+		result += string(char)
+	}
+	return strings.Split(result, " ")
 }

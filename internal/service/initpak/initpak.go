@@ -41,13 +41,13 @@ func InitHttpProxy() error {
 // 为nuclei poc引擎初始化，扫描漏洞前必须进行的
 func InitPocEngine() error {
 	fmt.Printf("[*] 初始化poc库\n")
-	if err := initNucleiPocList(); err != nil {
+	if err := initNucleiPocList("poc_all"); err != nil {
 		return err
 	}
 	return initNculeiProxy()
 }
 
-func initNucleiPocList() error {
+func initNucleiPocList(dir string) error {
 	var (
 		configs = config.Get()
 		pocFile [][]byte
@@ -59,7 +59,7 @@ func initNucleiPocList() error {
 			return err
 		}
 	} else {
-		pocFile, err = fileutils.ReadFilesFromEmbedFs(static.EmbedFS, "poc")
+		pocFile, err = fileutils.ReadFilesFromEmbedFs(static.EmbedFS, dir)
 		if err != nil {
 			return err
 		}

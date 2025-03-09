@@ -8,7 +8,6 @@ require (
 	github.com/Knetic/govaluate v3.0.0+incompatible
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/chainreactors/logs v0.7.0
-	github.com/chainreactors/neutron v0.0.0-20250219105559-912bdcebda9a
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fatih/color v1.18.0
 	github.com/go-sql-driver/mysql v1.8.1
