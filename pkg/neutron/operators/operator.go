@@ -2,8 +2,9 @@ package operators
 
 import (
 	"fmt"
-	"github.com/polite007/Milkyway/pkg/neutron/commons"
 	"strconv"
+
+	"github.com/polite007/Milkyway/pkg/neutron/commons"
 )
 
 // operators contains the operators that can be applied on protocols

@@ -2,13 +2,14 @@ package commons
 
 import (
 	"fmt"
-	"github.com/chainreactors/logs"
-	"github.com/davecgh/go-spew/spew"
-	"github.com/weppos/publicsuffix-go/publicsuffix"
 	"os"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/chainreactors/logs"
+	"github.com/davecgh/go-spew/spew"
+	"github.com/weppos/publicsuffix-go/publicsuffix"
 )
 
 var NeutronLog = logs.Log

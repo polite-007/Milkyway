@@ -1,10 +1,11 @@
 package httpx
 
 import (
-	"github.com/yinheli/mahonia"
-	"golang.org/x/net/html/charset"
 	"regexp"
 	"strings"
+
+	"github.com/yinheli/mahonia"
+	"golang.org/x/net/html/charset"
 )
 
 func toUtf8(content string, contentType string) string {

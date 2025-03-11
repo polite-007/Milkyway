@@ -3,11 +3,12 @@ package protocol_scan
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/polite007/Milkyway/internal/service/pact/protocol_scan/lib"
-	"github.com/polite007/Milkyway/internal/utils/proxy"
 	"net"
 	"strings"
 	"time"
+
+	"github.com/polite007/Milkyway/internal/service/pact/protocol_scan/lib"
+	"github.com/polite007/Milkyway/internal/utils/proxy"
 )
 
 func SmbProtocolScan(addr string) (string, error) {

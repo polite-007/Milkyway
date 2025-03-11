@@ -2,14 +2,15 @@ package cli
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/polite007/Milkyway/config"
 	"github.com/polite007/Milkyway/internal/service/initpak"
 	"github.com/polite007/Milkyway/internal/utils/fofa"
 	"github.com/polite007/Milkyway/pkg/fileutils"
 	"github.com/polite007/Milkyway/pkg/strutils"
 	"github.com/spf13/cobra"
-	"os"
-	"strings"
 )
 
 func ParseTarget() ([]string, []string, error) {

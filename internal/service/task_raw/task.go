@@ -2,6 +2,8 @@ package task_raw
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/polite007/Milkyway/config"
 	"github.com/polite007/Milkyway/internal/cli"
 	"github.com/polite007/Milkyway/internal/common"
@@ -10,7 +12,6 @@ import (
 	"github.com/polite007/Milkyway/pkg/color"
 	"github.com/polite007/Milkyway/pkg/logger"
 	"github.com/polite007/Milkyway/pkg/strutils"
-	"strings"
 )
 
 // IpActiveScan 探测存活IP

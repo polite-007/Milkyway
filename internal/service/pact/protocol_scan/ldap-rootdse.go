@@ -2,12 +2,13 @@ package protocol_scan
 
 import (
 	"fmt"
-	"github.com/polite007/Milkyway/internal/service/pact/protocol_scan/lib"
-	"github.com/polite007/Milkyway/internal/utils/proxy"
-	"github.com/polite007/Milkyway/pkg/strutils"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/polite007/Milkyway/internal/service/pact/protocol_scan/lib"
+	"github.com/polite007/Milkyway/internal/utils/proxy"
+	"github.com/polite007/Milkyway/pkg/strutils"
 )
 
 func LdapRootDseScan(addr string) (string, error) {

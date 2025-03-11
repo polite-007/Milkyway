@@ -3,13 +3,14 @@ package protocol_scan
 import (
 	"bytes"
 	"fmt"
-	"golang.org/x/net/icmp"
-	"golang.org/x/net/ipv4"
 	"net"
 	"os/exec"
 	"runtime"
 	"strings"
 	"time"
+
+	"golang.org/x/net/icmp"
+	"golang.org/x/net/ipv4"
 )
 
 func ICMPCheck(ip string, timeOut time.Duration) bool {

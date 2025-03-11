@@ -3,10 +3,11 @@ package operators
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/Knetic/govaluate"
-	"github.com/polite007/Milkyway/pkg/neutron/commons"
 	"regexp"
 	"strings"
+
+	"github.com/Knetic/govaluate"
+	"github.com/polite007/Milkyway/pkg/neutron/commons"
 )
 
 type Matcher struct {

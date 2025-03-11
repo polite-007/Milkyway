@@ -2,6 +2,7 @@ package protocol_vul
 
 import (
 	"fmt"
+
 	"github.com/mitchellh/go-vnc"
 	"github.com/polite007/Milkyway/config"
 	"github.com/polite007/Milkyway/internal/utils/proxy"

@@ -2,12 +2,13 @@ package http
 
 import (
 	"context"
-	"github.com/polite007/Milkyway/pkg/neutron/commons"
 	"net"
 	"net/http"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/polite007/Milkyway/pkg/neutron/commons"
 )
 
 var (

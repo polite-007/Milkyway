@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
-	"github.com/spaolacci/murmur3"
 	"hash"
 	"io/ioutil"
 	"log"
@@ -13,6 +12,8 @@ import (
 	"net/url"
 	"regexp"
 	"time"
+
+	"github.com/spaolacci/murmur3"
 )
 
 func getfavicon(httpbody string, turl string) string {

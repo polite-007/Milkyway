@@ -2,10 +2,11 @@ package initpak
 
 import (
 	"fmt"
-	"github.com/polite007/Milkyway/pkg/fileutils"
-	"github.com/polite007/Milkyway/pkg/strutils"
 	"strings"
 	"testing"
+
+	"github.com/polite007/Milkyway/pkg/fileutils"
+	"github.com/polite007/Milkyway/pkg/strutils"
 )
 
 func Test_GetPocAllTag(t *testing.T) {

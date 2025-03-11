@@ -3,11 +3,12 @@ package templates
 import (
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/polite007/Milkyway/pkg/neutron/commons"
 	"github.com/polite007/Milkyway/pkg/neutron/operators"
 	"github.com/polite007/Milkyway/pkg/neutron/protocols"
 	"github.com/polite007/Milkyway/pkg/neutron/protocols/executer"
-	"strings"
 )
 
 func (t *Template) GetTags() []string {

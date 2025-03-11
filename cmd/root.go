@@ -3,6 +3,10 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/signal"
+	"time"
+
 	"github.com/polite007/Milkyway/config"
 	"github.com/polite007/Milkyway/internal/cli"
 	"github.com/polite007/Milkyway/internal/common"
@@ -10,9 +14,6 @@ import (
 	"github.com/polite007/Milkyway/internal/utils/httpx"
 	"github.com/polite007/Milkyway/pkg/logger"
 	"github.com/spf13/cobra"
-	"os"
-	"os/signal"
-	"time"
 )
 
 var rootCmd = &cobra.Command{

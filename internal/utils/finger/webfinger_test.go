@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/polite007/Milkyway/pkg/fileutils"
-	"github.com/polite007/Milkyway/pkg/strutils"
 	"strings"
 	"sync"
 	"testing"
+
+	"github.com/polite007/Milkyway/pkg/fileutils"
+	"github.com/polite007/Milkyway/pkg/strutils"
 )
 
 type CnEN struct {

@@ -1,9 +1,10 @@
 package cli
 
 import (
-	"github.com/polite007/Milkyway/pkg/strutils"
 	"strconv"
 	"strings"
+
+	"github.com/polite007/Milkyway/pkg/strutils"
 )
 
 func ParsePort(ports string) (scanPorts []int) {

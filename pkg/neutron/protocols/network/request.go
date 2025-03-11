@@ -3,14 +3,15 @@ package network
 import (
 	"encoding/hex"
 	"errors"
-	"github.com/polite007/Milkyway/pkg/neutron/commons"
-	"github.com/polite007/Milkyway/pkg/neutron/operators"
-	protocols "github.com/polite007/Milkyway/pkg/neutron/protocols"
 	"io"
 	"net"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/polite007/Milkyway/pkg/neutron/commons"
+	"github.com/polite007/Milkyway/pkg/neutron/operators"
+	protocols "github.com/polite007/Milkyway/pkg/neutron/protocols"
 )
 
 var _ protocols.Request = &Request{}

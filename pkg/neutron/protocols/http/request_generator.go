@@ -2,13 +2,14 @@ package http
 
 import (
 	"fmt"
-	"github.com/polite007/Milkyway/pkg/neutron/commons"
-	"github.com/polite007/Milkyway/pkg/neutron/commons/dsl"
 	"net"
 	"net/http"
 	"net/url"
 	"path"
 	"strings"
+
+	"github.com/polite007/Milkyway/pkg/neutron/commons"
+	"github.com/polite007/Milkyway/pkg/neutron/commons/dsl"
 
 	"github.com/polite007/Milkyway/pkg/neutron/protocols"
 )

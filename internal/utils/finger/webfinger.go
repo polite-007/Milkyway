@@ -3,12 +3,13 @@ package finger
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
+	"sync"
+
 	"github.com/polite007/Milkyway/config"
 	"github.com/polite007/Milkyway/internal/utils/httpx"
 	"github.com/polite007/Milkyway/pkg/strutils"
 	"github.com/polite007/Milkyway/static"
-	"strings"
-	"sync"
 )
 
 type AssetsInfo struct {

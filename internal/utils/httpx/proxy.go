@@ -3,10 +3,11 @@ package httpx
 import (
 	"errors"
 	"fmt"
-	proxy2 "github.com/polite007/Milkyway/internal/utils/proxy"
-	"golang.org/x/net/proxy"
 	"net/http"
 	"net/url"
+
+	proxy2 "github.com/polite007/Milkyway/internal/utils/proxy"
+	"golang.org/x/net/proxy"
 )
 
 // WithProxy 为httpx库设置代理

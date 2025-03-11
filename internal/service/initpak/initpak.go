@@ -3,6 +3,13 @@ package initpak
 import (
 	"errors"
 	"fmt"
+	"net"
+	"net/http"
+	"net/url"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/polite007/Milkyway/config"
 	"github.com/polite007/Milkyway/internal/utils/httpx"
 	proxy2 "github.com/polite007/Milkyway/internal/utils/proxy"
@@ -14,12 +21,6 @@ import (
 	"github.com/polite007/Milkyway/static"
 	"golang.org/x/net/proxy"
 	"gopkg.in/yaml.v3"
-	"net"
-	"net/http"
-	"net/url"
-	"strings"
-	"sync"
-	"time"
 )
 
 var (

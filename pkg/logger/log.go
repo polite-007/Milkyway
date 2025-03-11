@@ -2,11 +2,12 @@ package logger
 
 import (
 	"fmt"
-	"github.com/polite007/Milkyway/pkg/color"
-	"github.com/polite007/Milkyway/pkg/fileutils"
 	"io"
 	"log"
 	"sync"
+
+	"github.com/polite007/Milkyway/pkg/color"
+	"github.com/polite007/Milkyway/pkg/fileutils"
 )
 
 // 用法

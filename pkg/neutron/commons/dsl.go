@@ -2,9 +2,10 @@ package commons
 
 import (
 	"errors"
+	"strings"
+
 	"github.com/Knetic/govaluate"
 	"github.com/polite007/Milkyway/pkg/neutron/commons/dsl"
-	"strings"
 )
 
 const (

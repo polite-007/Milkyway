@@ -2,12 +2,13 @@ package proxy
 
 import (
 	"errors"
-	"github.com/polite007/Milkyway/config"
-	"golang.org/x/net/proxy"
 	"net"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/polite007/Milkyway/config"
+	"golang.org/x/net/proxy"
 )
 
 // WrapperTCP 获取一个TCP连接

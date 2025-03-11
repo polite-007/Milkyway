@@ -1,8 +1,9 @@
 package color
 
 import (
-	"github.com/fatih/color"
 	"regexp"
+
+	"github.com/fatih/color"
 )
 
 var (

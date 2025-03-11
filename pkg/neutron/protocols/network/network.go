@@ -1,10 +1,11 @@
 package network
 
 import (
-	"github.com/polite007/Milkyway/pkg/neutron/operators"
-	protocols "github.com/polite007/Milkyway/pkg/neutron/protocols"
 	"net"
 	"strings"
+
+	"github.com/polite007/Milkyway/pkg/neutron/operators"
+	protocols "github.com/polite007/Milkyway/pkg/neutron/protocols"
 )
 
 // Request contains a Network protocol request to be made from a template

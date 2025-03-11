@@ -2,14 +2,15 @@ package protocol_vul
 
 import (
 	"fmt"
-	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/utils/proxy"
-	"github.com/polite007/Milkyway/pkg/color"
-	"github.com/polite007/Milkyway/pkg/logger"
 	"io"
 	"net"
 	"strings"
 	"time"
+
+	"github.com/polite007/Milkyway/config"
+	"github.com/polite007/Milkyway/internal/utils/proxy"
+	"github.com/polite007/Milkyway/pkg/color"
+	"github.com/polite007/Milkyway/pkg/logger"
 )
 
 var (

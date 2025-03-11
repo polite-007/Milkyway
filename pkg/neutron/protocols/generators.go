@@ -2,8 +2,9 @@ package protocols
 
 import (
 	"errors"
-	"github.com/polite007/Milkyway/pkg/neutron/commons"
 	"strings"
+
+	"github.com/polite007/Milkyway/pkg/neutron/commons"
 )
 
 // Inspired from https://github.com/ffuf/ffuf/blob/master/pkg/input/input.go

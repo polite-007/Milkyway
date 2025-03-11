@@ -1,11 +1,12 @@
 package task_raw
 
 import (
-	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/common"
-	"github.com/polite007/Milkyway/internal/service/pact"
 	"math/rand"
 	"time"
+
+	"github.com/polite007/Milkyway/config"
+	"github.com/polite007/Milkyway/internal/common"
+	"github.com/polite007/Milkyway/internal/service/pact/protocol_scan"
 )
 
 // newPortScanTask 返回存活的端口和对应的协议
@@ -19,7 +20,7 @@ func newPortScanTask(ipPortList []*common.IpPorts) (*common.TargetList, error) {
 		if !ok {
 			return nil, config.GetErrors().ErrAssertion
 		}
-		protocol, isAlive := pact.PortScan(p.host, p.port, config.PortScanTimeout)
+		protocol, isAlive := protocol_scan.PortScan(p.host, p.port, config.PortScanTimeout)
 		if !isAlive {
 			return nil, nil
 		} else {
@@ -72,7 +73,7 @@ func newPortScanTaskRandom(ipPortList []*common.IpPorts) (*common.TargetList, er
 		if !ok {
 			return nil, config.GetErrors().ErrAssertion
 		}
-		protocol, isAlive := pact.PortScan(p.host, p.port, config.PortScanTimeout)
+		protocol, isAlive := protocol_scan.PortScan(p.host, p.port, config.PortScanTimeout)
 		if !isAlive {
 			return nil, nil
 		} else {

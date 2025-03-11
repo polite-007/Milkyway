@@ -1,9 +1,10 @@
 package protocol_scan
 
 import (
+	"time"
+
 	"github.com/polite007/Milkyway/internal/service/pact/protocol_scan/lib"
 	"github.com/polite007/Milkyway/internal/utils/proxy"
-	"time"
 )
 
 func SmtpScan(addr string) (string, error) {

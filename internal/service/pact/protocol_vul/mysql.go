@@ -4,14 +4,15 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net"
+	"time"
+
 	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/polite007/Milkyway/config"
 	"github.com/polite007/Milkyway/internal/utils/proxy"
 	"github.com/polite007/Milkyway/pkg/color"
 	"github.com/polite007/Milkyway/pkg/logger"
-	"net"
-	"time"
 )
 
 func mysqlConn(ip string, port int, user, pass string) error {

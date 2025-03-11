@@ -3,12 +3,13 @@ package http
 import (
 	"bufio"
 	"fmt"
-	"github.com/polite007/Milkyway/pkg/neutron/commons"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/polite007/Milkyway/pkg/neutron/commons"
 )
 
 // rawRequest defines a basic HTTP raw request

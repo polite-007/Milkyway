@@ -5,15 +5,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/polite007/Milkyway/pkg/neutron/commons"
-	"github.com/polite007/Milkyway/pkg/neutron/operators"
-	"github.com/polite007/Milkyway/pkg/neutron/protocols"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/polite007/Milkyway/pkg/neutron/commons"
+	"github.com/polite007/Milkyway/pkg/neutron/operators"
+	"github.com/polite007/Milkyway/pkg/neutron/protocols"
 )
 
 var errStopExecution = errors.New("stop execution due to unresolved variables")

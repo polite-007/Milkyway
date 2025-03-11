@@ -3,6 +3,8 @@
 
 package protocols
 
+import "github.com/polite007/Milkyway/pkg/neutron/commons"
+
 type Variable map[string]interface{}
 
 func (variables Variable) Len() int {

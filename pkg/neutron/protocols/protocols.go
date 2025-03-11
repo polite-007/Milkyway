@@ -1,8 +1,9 @@
 package protocols
 
 import (
-	"github.com/polite007/Milkyway/pkg/neutron/operators"
 	"time"
+
+	"github.com/polite007/Milkyway/pkg/neutron/operators"
 )
 
 type ExecuterOptions struct {

@@ -3,14 +3,15 @@ package httpx
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/polite007/Milkyway/config"
-	"golang.org/x/net/html"
 	"io"
 	"net"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/polite007/Milkyway/config"
+	"golang.org/x/net/html"
 )
 
 var (
