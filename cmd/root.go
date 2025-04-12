@@ -56,7 +56,6 @@ func RunRoot(cmd *cobra.Command, args []string) error {
 
 		IpActiveList []string                 // 存活ip列表
 		IpPortList   []*common.IpPortProtocol // ip端口协议列表
-		WebList      []*common.Resps          // web列表
 	)
 	// 解析参数
 	if err = cli.ParseArgs(cmd); err != nil {
@@ -93,11 +92,11 @@ func RunRoot(cmd *cobra.Command, args []string) error {
 		config.Get().Vul.WebList = append(config.Get().Vul.WebList, WebListOne...)
 	}
 	// 协议漏洞扫描
-	if err = task_raw.ProtocolVulScan(IpPortList); err != nil {
+	if err = task_raw.ProtocolVulScan(config.Get().Vul.IpPortList); err != nil {
 		return err
 	}
 	// web漏洞扫描
-	if err = task_raw.WebPocVulScan(WebList); err != nil {
+	if err = task_raw.WebPocVulScan(config.Get().Vul.WebList); err != nil {
 		return err
 	}
 	// 等待所有日志写入

@@ -1,6 +1,7 @@
 package common
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/jung-kurt/gofpdf"
 	"github.com/polite007/Milkyway/static"
@@ -41,10 +42,13 @@ func (i *AssetsVuls) AddProtocolVul(ip string, port int, protocol string, messag
 	})
 }
 
-func (i *AssetsVuls) AddWebVul(vulUrl string, vulName string) {
+func (i *AssetsVuls) AddWebVul(vulUrl, vulName, des, recovery, level string) {
 	i.WebVul = append(i.WebVul, &WebVul{
-		VulUrl:  vulUrl,
-		VulName: vulName,
+		VulUrl:      vulUrl,
+		VulName:     vulName,
+		Description: des,
+		Level:       level,
+		Recovery:    recovery,
 	})
 }
 
@@ -56,8 +60,11 @@ type ProtocolVul struct {
 }
 
 type WebVul struct {
-	VulUrl  string
-	VulName string
+	VulUrl      string
+	VulName     string
+	Level       string // 漏洞等级
+	Description string // 漏洞描述
+	Recovery    string // 漏洞修复意见
 }
 
 type IpPortProtocol struct {
@@ -191,19 +198,32 @@ func (i *AssetsVuls) GenerateReport() {
 
 	// 添加封面
 	pdf.AddPage()
+	// 添加 logo
+	logoFile, err := static.EmbedFS.Open("img/logo.png")
+	if err == nil {
+		defer logoFile.Close()
+		logoData, err := io.ReadAll(logoFile)
+		if err == nil {
+			pdf.RegisterImageOptionsReader("logo", gofpdf.ImageOptions{ImageType: "PNG", ReadDpi: true}, io.NopCloser(bytes.NewReader(logoData)))
+			pdf.ImageOptions("logo", 15, 15, 30, 0, false, gofpdf.ImageOptions{ImageType: "PNG", ReadDpi: true}, 0, "")
+		}
+	}
 	pdf.Ln(60)
 	pdf.SetFont("simsun", "B", 40)
 	pdf.SetTextColor(0, 0, 0)
 	pdf.SetFillColor(230, 230, 230)
-	pdf.CellFormat(0, 30, "Milkyway 渗透测试报告", "0", 0, "C", true, 0, "")
-	pdf.Ln(150)
+	pdf.CellFormat(0, 30, "简易渗透测试报告", "0", 0, "C", true, 0, "")
+	pdf.Ln(30)
+	pdf.SetFont("simsun", "", 18)
+	pdf.CellFormat(0, 10, "By:Milkyway", "0", 0, "C", false, 0, "")
+	pdf.Ln(130)
 	pdf.SetFont("simsun", "", 18)
 	pdf.CellFormat(0, 10, fmt.Sprintf("报告生成时间: %s", time.Now().Format("2006-01-02 15:04:05")), "0", 0, "C", false, 0, "")
 
 	// 添加正文页
 	pdf.AddPage()
 	pdf.SetFont("simsun", "B", 16)
-	pdf.Cell(40, 10, "漏洞测试报告")
+	pdf.Cell(40, 10, "资产成果")
 	pdf.Ln(20)
 
 	// 写入 IpPortList 信息
@@ -212,47 +232,110 @@ func (i *AssetsVuls) GenerateReport() {
 	pdf.Ln(10)
 	pdf.SetFont("simsun", "", 12)
 	pdf.SetDrawColor(150, 150, 150)
+	pdf.SetFillColor(240, 240, 240)
+	// 表头
+	pdf.CellFormat(60, 10, "IP", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(60, 10, "端口", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(60, 10, "协议", "1", 0, "C", true, 0, "")
+	pdf.Ln(10)
 	for _, ipPort := range i.IpPortList {
-		pdf.CellFormat(190, 10, fmt.Sprintf("IP: %s, 端口: %d, 协议: %s", ipPort.IP, ipPort.Port, ipPort.Protocol), "1", 0, "L", false, 0, "")
+		pdf.CellFormat(60, 10, ipPort.IP, "1", 0, "L", false, 0, "")
+		pdf.CellFormat(60, 10, fmt.Sprintf("%d", ipPort.Port), "1", 0, "L", false, 0, "")
+		pdf.CellFormat(60, 10, ipPort.Protocol, "1", 0, "L", false, 0, "")
 		pdf.Ln(10)
 	}
-	pdf.Ln(10)
+	pdf.Ln(20)
 
 	// 写入 WebList 信息
 	pdf.SetFont("simsun", "B", 14)
 	pdf.CellFormat(40, 10, "Web 列表", "B", 0, "L", false, 0, "")
 	pdf.Ln(10)
 	pdf.SetFont("simsun", "", 12)
+	// 表头
+	pdf.CellFormat(47.5, 10, "URL", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(47.5, 10, "标题", "1", 0, "C", true, 0, "")
+	//pdf.CellFormat(47.5, 10, "服务器", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(47.5, 10, "状态码", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(47.5, 10, "备注", "1", 0, "C", true, 0, "")
+	pdf.Ln(10)
+
 	for _, resp := range i.WebList {
 		title := resp.Title
 		if title == "" {
 			title = "无标题"
 		}
-		pdf.CellFormat(190, 10, fmt.Sprintf("URL: %s, 标题: %s, 服务器: %s, 状态码: %d", resp.Url.String(), title, resp.Server, resp.StatusCode), "1", 0, "L", false, 0, "")
-		pdf.Ln(10)
+		x := pdf.GetX()
+		y := pdf.GetY()
+
+		pdf.SetXY(x, y)
+		pdf.MultiCell(47.5, 10, resp.Url.String(), "1", "L", false)
+
+		pdf.SetXY(x+47.5, y)
+		pdf.MultiCell(47.5, 10, title, "1", "L", false)
+
+		//pdf.SetXY(x+47.5*2, y)
+		//pdf.MultiCell(47.5, 10, resp.Server, "1", "L", false)
+
+		pdf.SetXY(x+47.5*2, y)
+		pdf.MultiCell(47.5, 10, fmt.Sprintf("%d", resp.StatusCode), "1", "L", false)
+
+		pdf.SetXY(x+47.5*3, y)
+		pdf.MultiCell(47.5, 10, resp.Cms, "1", "L", false)
 	}
-	pdf.Ln(10)
+	pdf.Ln(20)
 
 	// 写入 Vul 信息
-	pdf.SetFont("simsun", "B", 14)
-	pdf.CellFormat(40, 10, "漏洞信息", "B", 0, "L", false, 0, "")
-	pdf.Ln(10)
-	pdf.SetFont("simsun", "", 12)
+	pdf.AddPage()
+	pdf.SetFont("simsun", "B", 10)
+	pdf.Cell(40, 10, "漏洞成果")
+	pdf.Ln(20)
 
 	// 写入 ProtocolVul 信息
 	pdf.CellFormat(40, 10, "协议漏洞", "B", 0, "L", false, 0, "")
 	pdf.Ln(10)
-	for _, protocolVul := range i.ProtocolVul {
-		pdf.CellFormat(190, 10, fmt.Sprintf("IP: %s, 端口: %d, 协议: %s, 内容: %s", protocolVul.IP, protocolVul.Port, protocolVul.Protocol, protocolVul.Message), "1", 0, "L", false, 0, "")
-		pdf.Ln(10)
-	}
+	// 表头
+	pdf.CellFormat(47.5, 10, "IP", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(47.5, 10, "端口", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(47.5, 10, "协议", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(47.5, 10, "内容", "1", 0, "C", true, 0, "")
 	pdf.Ln(10)
+	for _, protocolVul := range i.ProtocolVul {
+		x := pdf.GetX()
+		y := pdf.GetY()
+
+		pdf.SetXY(x, y)
+		pdf.MultiCell(47.5, 10, protocolVul.IP, "1", "L", false)
+		pdf.SetXY(x+47.5, y)
+		pdf.MultiCell(47.5, 10, fmt.Sprintf("%d", protocolVul.Port), "1", "L", false)
+		pdf.SetXY(x+47.5*2, y)
+		pdf.MultiCell(47.5, 10, protocolVul.Protocol, "1", "L", false)
+		pdf.SetXY(x+47.5*3, y)
+		pdf.MultiCell(47.5, 10, protocolVul.Message, "1", "L", false)
+	}
+	pdf.Ln(20)
 
 	// 写入 WebVul 信息
 	pdf.CellFormat(40, 10, "Web 漏洞", "B", 0, "L", false, 0, "")
 	pdf.Ln(10)
+	// 表头
+	pdf.CellFormat(60, 10, "漏洞名称", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(60, 10, "漏洞地址", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(60, 10, "漏洞等级", "1", 0, "C", true, 0, "")
+	pdf.Ln(10)
 	for _, webVul := range i.WebVul {
-		pdf.CellFormat(190, 10, fmt.Sprintf("漏洞 URL: %s, 漏洞名称: %s", webVul.VulUrl, webVul.VulName), "1", 0, "L", false, 0, "")
+		// 第一行：漏洞名称、漏洞地址、漏洞等级
+		x := pdf.GetX()
+		y := pdf.GetY()
+		pdf.SetXY(x, y)
+		pdf.MultiCell(60, 10, webVul.VulName, "1", "L", false)
+		pdf.SetXY(x+60, y)
+		pdf.MultiCell(60, 10, webVul.VulUrl, "1", "L", false)
+		pdf.SetXY(x+60*2, y)
+		pdf.MultiCell(60, 10, webVul.Level, "1", "L", false)
+		// 第二行：漏洞描述
+		pdf.MultiCell(180, 10, "描述: "+webVul.Description, "1", "L", false)
+		// 第三行：修复措施
+		//pdf.MultiCell(180, 10, "修复措施: "+webVul.Recovery, "1", "L", false)
 		pdf.Ln(10)
 	}
 

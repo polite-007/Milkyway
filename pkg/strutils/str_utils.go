@@ -117,9 +117,11 @@ func IsDomain(str string) ([]string, bool) {
 func HasCommonElement(slice1 []string, slice2 []string) bool {
 	elementMap := make(map[string]bool)
 	for _, item := range slice1 {
+		item = strings.ToLower(item)
 		elementMap[item] = true
 	}
 	for _, item := range slice2 {
+		item = strings.ToLower(item)
 		if elementMap[item] {
 			return true
 		}

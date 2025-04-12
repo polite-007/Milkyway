@@ -67,8 +67,6 @@ func initNucleiPocList(dir string) error {
 		}
 	}
 
-	fmt.Printf("[*] 当前poc库漏洞数: %d\n", len(pocFile))
-
 	if configs.PocId != "" {
 		var configsPocids sync.Map
 		for _, pocId := range strings.Split(configs.PocId, ",") {
@@ -123,6 +121,8 @@ func initNucleiPocList(dir string) error {
 		}
 		PocsList = append(PocsList, t)
 	}
+	fmt.Printf("[*] 当前poc库漏洞数: %d\n", len(PocsList))
+
 	return nil
 }
 

@@ -29,7 +29,7 @@ func newWebPocVulScan(pocTask []*PocTask) error {
 			if res.Matched || res.Extracted {
 				result := fmt.Sprintf("[*] %s %s id: %s\n", p.TargetUrl, color.Red(p.Poc.Info.Name), p.Poc.Id)
 				logger.OutLog(result)
-				config.Get().Vul.AddWebVul(p.TargetUrl, p.Poc.Info.Name)
+				config.Get().Vul.AddWebVul(p.TargetUrl, p.Poc.Info.Name, p.Poc.Info.Description, p.Poc.Info.Zombie, p.Poc.Info.Severity)
 			}
 		}
 		return nil, config.GetErrors().ErrTaskFailed
