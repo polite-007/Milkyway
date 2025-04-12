@@ -2,6 +2,7 @@ package task_raw
 
 import (
 	"fmt"
+	"github.com/polite007/Milkyway/internal/common"
 
 	"github.com/polite007/Milkyway/config"
 	"github.com/polite007/Milkyway/internal/utils/finger"
@@ -11,7 +12,7 @@ import (
 )
 
 // newWebScanWithDomainTask
-func newWebScanWithDomainTask(targetUrls []string) ([]*httpx.Resps, error) {
+func newWebScanWithDomainTask(targetUrls []string) ([]*common.Resps, error) {
 	NewPool := NewWorkPool(config.Get().WorkPoolNum)
 	NewPool.Start()
 
@@ -46,12 +47,12 @@ func newWebScanWithDomainTask(targetUrls []string) ([]*httpx.Resps, error) {
 		close(NewPool.Result)    // 关闭结果队列
 	}()
 
-	var result []*httpx.Resps
+	var result []*common.Resps
 	for res := range NewPool.Result {
 		if res == nil {
 			continue
 		}
-		resultSimple := res.(*httpx.Resps)
+		resultSimple := res.(*common.Resps)
 		var logOut string
 		resultSimple.Cms, resultSimple.Tags = finger.WebFinger(resultSimple)
 		if resultSimple.Cms == "" {

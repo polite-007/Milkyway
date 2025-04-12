@@ -3,11 +3,11 @@ package finger
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/polite007/Milkyway/internal/common"
 	"strings"
 	"sync"
 
 	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/utils/httpx"
 	"github.com/polite007/Milkyway/pkg/strutils"
 	"github.com/polite007/Milkyway/static"
 )
@@ -46,7 +46,7 @@ func initFingerFile() {
 	}
 }
 
-func WebFinger(resp *httpx.Resps) (string, []string) {
+func WebFinger(resp *common.Resps) (string, []string) {
 	once.Do(initFingerFile)
 	headers := strutils.MapToJson(resp.Header)
 	var cms []string

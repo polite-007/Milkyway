@@ -32,6 +32,7 @@ func mysqlConn(ip string, port int, user, pass string) error {
 		if err == nil {
 			result := fmt.Sprintf("[%s] %v:%v %v:%v\n", color.Red("mysql"), Host, Port, color.Red(Username), color.Red(Password))
 			logger.OutLog(result)
+			config.Get().Vul.AddProtocolVul(Host, port, "mysql", fmt.Sprintf("%v:%v", Username, Password))
 		} else {
 			return err
 		}

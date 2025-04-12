@@ -116,9 +116,11 @@ func redisUnauth(ip string, port int) error {
 		if err != nil {
 			result := fmt.Sprintf("[%s] %s:%v %s\n", color.Red("redis"), ip, port, color.Red("unauthorized"))
 			logger.OutLog(result)
+			config.Get().Vul.AddProtocolVul(ip, port, "redis", "unauthorized")
 		} else {
 			result := fmt.Sprintf("[%s] %s:%v %s:%s\n", color.Red("redis"), ip, port, color.Red("unauthorized file"), color.Red(dir+"/"+dbfilename))
 			logger.OutLog(result)
+			config.Get().Vul.AddProtocolVul(ip, port, "redis", fmt.Sprintf("%s", "unauthorized file: "+dir+"/"+dbfilename))
 		}
 		return nil
 	} else {

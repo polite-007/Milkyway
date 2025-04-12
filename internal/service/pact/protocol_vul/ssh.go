@@ -37,6 +37,7 @@ func sshConn(ip string, port int, user string, pass string) error {
 			var result string
 			result = fmt.Sprintf("[%s] %v:%v %s:%s\n", color.Red("ssh"), Host, Port, color.Red(Username), color.Red(Password))
 			logger.OutLog(result)
+			config.Get().Vul.AddProtocolVul(ip, port, "ssh", fmt.Sprintf("%v:%v", Username, Password))
 		}
 		return nil
 	} else {

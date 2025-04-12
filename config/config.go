@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"github.com/polite007/Milkyway/internal/common"
 	"time"
 )
 
@@ -37,6 +38,8 @@ type Application struct {
 	TargetFile     string
 	OutputFileName string
 	WorkPoolNum    int
+	Report         bool
+	Vul            *common.AssetsVuls
 
 	TLSHandshakeTimeout time.Duration
 	WebScanTimeout      time.Duration
@@ -143,6 +146,7 @@ func Get() *Application {
 		TargetFile:          targetFile,
 		OutputFileName:      outputFileName,
 		WorkPoolNum:         workPoolNum,
+		Vul:                 &common.AssetsVuls{},
 		TLSHandshakeTimeout: 8 * time.Second,
 		WebScanTimeout:      10 * time.Second,
 		PortScanTimeout:     3 * time.Second,

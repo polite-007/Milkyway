@@ -5,26 +5,30 @@ import (
 	"strings"
 
 	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/cli"
 	"github.com/polite007/Milkyway/internal/common"
 	"github.com/polite007/Milkyway/internal/service/initpak"
-	"github.com/polite007/Milkyway/internal/utils/httpx"
 	"github.com/polite007/Milkyway/pkg/color"
 	"github.com/polite007/Milkyway/pkg/logger"
 	"github.com/polite007/Milkyway/pkg/strutils"
 )
 
-// IpActiveScan 探测存活IP
-func IpActiveScan(ipList []string) ([]string, error) {
+// 参数:
+//   - ipList: 需要扫描的IP地址列表。
+//
+// 返回值:
+//   - []string: 活跃的IP地址列表。
+//   - error: 如果扫描过程中发生错误，则返回错误信息；否则返回nil。
+
+func IpActiveScan(ips []string) ([]string, error) {
 	logger.OutLog("---------------IpActiveScan-----------------\n")
 	var err error
 	configs := config.Get()
-	ipAliveList := ipList
+	ipAliveList := ips
 	if configs.CheckProxy() {
 		logger.OutLog(fmt.Sprintf("代理模式暂不支持ICMP探测,直接进行端口扫描\n"))
 	} else {
 		if !configs.NoPing {
-			ipAliveList, err = newIPScanTask(ipList)
+			ipAliveList, err = newIPScanTask(ips)
 			if err != nil {
 				return nil, err
 			}
@@ -34,18 +38,26 @@ func IpActiveScan(ipList []string) ([]string, error) {
 	return ipAliveList, err
 }
 
-// PortActiveScan 探测开放端口&协议识别
-func PortActiveScan(ipAliveList []string) ([]*common.IpPortProtocol, error) {
+// 参数:
+//   - ips: 需要扫描的IP地址列表。
+//   - port: 需要扫描的端口列表。
+//   - random: 是否启用随机扫描模式。如果为true，则使用随机顺序扫描端口；否则按顺序扫描。
+//
+// 返回值:
+//   - []*common.IpPortProtocol: 扫描到的活跃IP、端口和协议信息列表。
+//   - error: 如果扫描过程中发生错误，则返回错误信息；否则返回nil。
+
+func PortActiveScan(ips []string, port []int) ([]*common.IpPortProtocol, error) {
 	logger.OutLog("---------------PortActiveScan---------------\n")
 	var (
 		portScanTaskList []*common.IpPorts
 		aliveIpPortList  *common.TargetList
 		err              error
 	)
-	for _, ip := range ipAliveList {
+	for _, ip := range ips {
 		portScanTaskList = append(portScanTaskList, &common.IpPorts{
 			IP:    ip,
-			Ports: cli.ParsePort(config.Get().Port),
+			Ports: port,
 		})
 	}
 	if config.Get().ScanRandom {
@@ -65,13 +77,13 @@ func PortActiveScan(ipAliveList []string) ([]*common.IpPortProtocol, error) {
 }
 
 // WebActiveScan 扫描非web协议的目标,
-func WebActiveScan(ipPortList []*common.IpPortProtocol) ([]*common.IpPortProtocol, []*httpx.Resps, error) {
+func WebActiveScan(ipPortList []*common.IpPortProtocol) ([]*common.IpPortProtocol, []*common.Resps, error) {
 	logger.OutLog("---------------WebActiveScan----------------\n")
 	return newWebScanTask(ipPortList)
 }
 
 // WebScanWithDomain url网站扫描
-func WebScanWithDomain(targetUrl []string) ([]*httpx.Resps, error) {
+func WebScanWithDomain(targetUrl []string) ([]*common.Resps, error) {
 	logger.OutLog("---------------WebScanWithDomain------------\n")
 	return newWebScanWithDomainTask(targetUrl)
 }
@@ -83,7 +95,7 @@ func ProtocolVulScan(ipPortList []*common.IpPortProtocol) error {
 }
 
 // WebPocVulScan 网站漏洞扫描
-func WebPocVulScan(WebList []*httpx.Resps) error {
+func WebPocVulScan(WebList []*common.Resps) error {
 	logger.OutLog("---------------WebPocVulScan----------------\n")
 	// 初始化poc引擎
 	if err := initpak.InitPocEngine(); err != nil {

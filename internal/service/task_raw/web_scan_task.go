@@ -13,7 +13,7 @@ import (
 )
 
 // newWebScanTask
-func newWebScanTask(targetList []*common.IpPortProtocol) ([]*common.IpPortProtocol, []*httpx.Resps, error) {
+func newWebScanTask(targetList []*common.IpPortProtocol) ([]*common.IpPortProtocol, []*common.Resps, error) {
 	NewPool := NewWorkPool(config.Get().WorkPoolNum)
 	NewPool.Start()
 
@@ -37,7 +37,7 @@ func newWebScanTask(targetList []*common.IpPortProtocol) ([]*common.IpPortProtoc
 
 	var ipPortListNotWeb []*common.IpPortProtocol
 	var ipPortList []*common.IpPortProtocol
-	var result []*httpx.Resps
+	var result []*common.Resps
 
 	go func() {
 		for _, ipPortProtocol := range targetList {
@@ -64,7 +64,7 @@ func newWebScanTask(targetList []*common.IpPortProtocol) ([]*common.IpPortProtoc
 		if res == nil {
 			continue
 		}
-		resultSimple := res.(*httpx.Resps)
+		resultSimple := res.(*common.Resps)
 		ip, port := strutils.SplitHost(resultSimple.Url.Host)
 		ipPortList = append(ipPortList, &common.IpPortProtocol{
 			IP:       ip,

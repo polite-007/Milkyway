@@ -27,6 +27,7 @@ func vncConn(ip string, port int, pass string) error {
 		defer client.Close()
 		result := fmt.Sprintf("[%s] %v:%v password:%v\n", color.Red("vnc"), ip, port, color.Red(pass))
 		logger.OutLog(result)
+		config.Get().Vul.AddProtocolVul(ip, port, "vnc", fmt.Sprintf("%v", pass))
 	}
 	return nil
 }

@@ -3,10 +3,10 @@ package httpx
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/polite007/Milkyway/internal/common"
 	"io"
 	"net"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
@@ -87,19 +87,7 @@ func Put(host string, header map[string]string, path string, body string) (*http
 	return resp, nil
 }
 
-type Resps struct {
-	Url        *url.URL
-	Title      string
-	Body       string
-	Header     map[string][]string
-	Server     string
-	StatusCode int
-	FavHash    string
-	Cms        string
-	Tags       []string
-}
-
-func HandleResponse(resp *http.Response) (*Resps, error) {
+func HandleResponse(resp *http.Response) (*common.Resps, error) {
 	defer resp.Body.Close()
 	// 读取响应体
 	body, err := io.ReadAll(resp.Body)
@@ -139,7 +127,7 @@ func HandleResponse(resp *http.Response) (*Resps, error) {
 	favhash := getfavicon(httpbody, resp.Request.URL.String())
 
 	// 返回结果
-	return &Resps{
+	return &common.Resps{
 		Url:        resp.Request.URL,
 		Title:      title,
 		Body:       httpbody,
