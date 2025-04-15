@@ -3,7 +3,6 @@ package finger
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/polite007/Milkyway/internal/common"
 	"strings"
 	"sync"
 
@@ -46,7 +45,7 @@ func initFingerFile() {
 	}
 }
 
-func WebFinger(resp *common.Resps) (string, []string) {
+func WebFinger(resp *config.Resps) (string, []string) {
 	once.Do(initFingerFile)
 	headers := strutils.MapToJson(resp.Header)
 	var cms []string

@@ -1,16 +1,15 @@
-package task_raw
+package task
 
 import (
 	"math/rand"
 	"time"
 
 	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/common"
-	"github.com/polite007/Milkyway/internal/service/pact/protocol_scan"
+	"github.com/polite007/Milkyway/internal/service/protocol_scan_vul/protocol_scan"
 )
 
 // newPortScanTask 返回存活的端口和对应的协议
-func newPortScanTask(ipPortList []*common.IpPorts) (*common.TargetList, error) {
+func newPortScanTask(ipPortList []*config.IpPorts) (*config.TargetList, error) {
 	var PortScanTask []*Addr
 	NewPool := NewWorkPool(config.Get().WorkPoolNum)
 	NewPool.Start()
@@ -53,7 +52,7 @@ func newPortScanTask(ipPortList []*common.IpPorts) (*common.TargetList, error) {
 		close(NewPool.Result)    // 关闭结果队列
 	}()
 
-	result := common.NewIpPortProtocolList()
+	result := config.NewIpPortProtocolList()
 	for res := range NewPool.Result {
 		if res == nil {
 			continue
@@ -64,7 +63,7 @@ func newPortScanTask(ipPortList []*common.IpPorts) (*common.TargetList, error) {
 	return result, nil
 }
 
-func newPortScanTaskRandom(ipPortList []*common.IpPorts) (*common.TargetList, error) {
+func newPortScanTaskRandom(ipPortList []*config.IpPorts) (*config.TargetList, error) {
 	NewPool := NewWorkPool(config.Get().WorkPoolNum)
 	NewPool.Start()
 
@@ -100,7 +99,7 @@ func newPortScanTaskRandom(ipPortList []*common.IpPorts) (*common.TargetList, er
 		close(NewPool.Result)    // 关闭结果队列
 	}()
 
-	result := common.NewIpPortProtocolList()
+	result := config.NewIpPortProtocolList()
 	for res := range NewPool.Result {
 		if res == nil {
 			continue

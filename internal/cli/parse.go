@@ -6,13 +6,14 @@ import (
 	"strings"
 
 	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/service/initpak"
+	"github.com/polite007/Milkyway/internal/service/init"
 	"github.com/polite007/Milkyway/internal/utils/fofa"
 	"github.com/polite007/Milkyway/pkg/fileutils"
 	"github.com/polite007/Milkyway/pkg/strutils"
 	"github.com/spf13/cobra"
 )
 
+// ParseTarget 获取ip列表和url列表
 func ParseTarget() ([]string, []string, error) {
 	var (
 		configs  = config.Get()
@@ -78,6 +79,7 @@ func ParseTarget() ([]string, []string, error) {
 	return nil, nil, errors.ErrTargetEmpty
 }
 
+// ParseArgs 解析命令行参数
 func ParseArgs(cmd *cobra.Command) error {
 	var (
 		configs = config.Get()
@@ -174,7 +176,7 @@ func ParseArgs(cmd *cobra.Command) error {
 		configs.Port = config.PortDefault
 	}
 	// 初始化httpx代理
-	if err = initpak.InitHttpProxy(); err != nil {
+	if err = init.InitHttpProxy(); err != nil {
 		return err
 	}
 	if configs.FofaKey == "" {

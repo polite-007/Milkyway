@@ -1,8 +1,8 @@
-package task_raw
+package task
 
 import (
 	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/service/pact/protocol_scan"
+	"github.com/polite007/Milkyway/internal/service/protocol_scan_vul/protocol_scan"
 )
 
 // IPScanTask 返回存活的ip列表

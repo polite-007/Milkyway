@@ -1,12 +1,11 @@
-package task_raw
+package task
 
 import (
 	"fmt"
 	"strings"
 
 	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/common"
-	"github.com/polite007/Milkyway/internal/service/initpak"
+	"github.com/polite007/Milkyway/internal/service/init"
 	"github.com/polite007/Milkyway/pkg/color"
 	"github.com/polite007/Milkyway/pkg/logger"
 	"github.com/polite007/Milkyway/pkg/strutils"
@@ -47,15 +46,15 @@ func IpActiveScan(ips []string) ([]string, error) {
 //   - []*common.IpPortProtocol: 扫描到的活跃IP、端口和协议信息列表。
 //   - error: 如果扫描过程中发生错误，则返回错误信息；否则返回nil。
 
-func PortActiveScan(ips []string, port []int) ([]*common.IpPortProtocol, error) {
+func PortActiveScan(ips []string, port []int) ([]*config.IpPortProtocol, error) {
 	logger.OutLog("---------------PortActiveScan---------------\n")
 	var (
-		portScanTaskList []*common.IpPorts
-		aliveIpPortList  *common.TargetList
+		portScanTaskList []*config.IpPorts
+		aliveIpPortList  *config.TargetList
 		err              error
 	)
 	for _, ip := range ips {
-		portScanTaskList = append(portScanTaskList, &common.IpPorts{
+		portScanTaskList = append(portScanTaskList, &config.IpPorts{
 			IP:    ip,
 			Ports: port,
 		})
@@ -77,28 +76,28 @@ func PortActiveScan(ips []string, port []int) ([]*common.IpPortProtocol, error) 
 }
 
 // WebActiveScan 扫描非web协议的目标,
-func WebActiveScan(ipPortList []*common.IpPortProtocol) ([]*common.IpPortProtocol, []*common.Resps, error) {
+func WebActiveScan(ipPortList []*config.IpPortProtocol) ([]*config.IpPortProtocol, []*config.Resps, error) {
 	logger.OutLog("---------------WebActiveScan----------------\n")
 	return newWebScanTask(ipPortList)
 }
 
-// WebScanWithDomain url网站扫描
-func WebScanWithDomain(targetUrl []string) ([]*common.Resps, error) {
+// WebScanWithDomain 根据url探测
+func WebScanWithDomain(targetUrl []string) ([]*config.Resps, error) {
 	logger.OutLog("---------------WebScanWithDomain------------\n")
 	return newWebScanWithDomainTask(targetUrl)
 }
 
 // ProtocolVulScan 协议漏洞扫描
-func ProtocolVulScan(ipPortList []*common.IpPortProtocol) error {
+func ProtocolVulScan(ipPortList []*config.IpPortProtocol) error {
 	logger.OutLog("---------------ProtocolVulScan--------------\n")
 	return newProtocolVulScan(ipPortList)
 }
 
 // WebPocVulScan 网站漏洞扫描
-func WebPocVulScan(WebList []*common.Resps) error {
+func WebPocVulScan(WebList []*config.Resps) error {
 	logger.OutLog("---------------WebPocVulScan----------------\n")
 	// 初始化poc引擎
-	if err := initpak.InitPocEngine(); err != nil {
+	if err := init.InitPocEngine(); err != nil {
 		return err
 	}
 	// 打印配置
@@ -110,7 +109,7 @@ func WebPocVulScan(WebList []*common.Resps) error {
 
 	// 匹配漏洞
 	var pocTask []*PocTask
-	for _, poc := range initpak.PocsList {
+	for _, poc := range init.PocsList {
 		for _, web := range WebList {
 			if web.StatusCode == 404 {
 				continue

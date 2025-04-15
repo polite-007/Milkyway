@@ -1,4 +1,4 @@
-package common
+package config
 
 import (
 	"bytes"
@@ -6,173 +6,10 @@ import (
 	"github.com/jung-kurt/gofpdf"
 	"github.com/polite007/Milkyway/static"
 	"io"
-	"net/url"
-	"sync"
 	"time"
 )
 
-type Resps struct {
-	Url        *url.URL
-	Title      string
-	Body       string
-	Header     map[string][]string
-	Server     string
-	StatusCode int
-	FavHash    string
-	Cms        string
-	Tags       []string
-}
-
-// 存放一些通用结构体
-
-// 漏洞结构体
-type AssetsVuls struct {
-	WebList     []*Resps
-	IpPortList  []*IpPortProtocol
-	ProtocolVul []*ProtocolVul
-	WebVul      []*WebVul
-}
-
-func (i *AssetsVuls) AddProtocolVul(ip string, port int, protocol string, message string) {
-	i.ProtocolVul = append(i.ProtocolVul, &ProtocolVul{
-		IP:       ip,
-		Port:     port,
-		Protocol: protocol,
-		Message:  message,
-	})
-}
-
-func (i *AssetsVuls) AddWebVul(vulUrl, vulName, des, recovery, level string) {
-	i.WebVul = append(i.WebVul, &WebVul{
-		VulUrl:      vulUrl,
-		VulName:     vulName,
-		Description: des,
-		Level:       level,
-		Recovery:    recovery,
-	})
-}
-
-type ProtocolVul struct {
-	IP       string
-	Port     int
-	Protocol string
-	Message  string
-}
-
-type WebVul struct {
-	VulUrl      string
-	VulName     string
-	Level       string // 漏洞等级
-	Description string // 漏洞描述
-	Recovery    string // 漏洞修复意见
-}
-
-type IpPortProtocol struct {
-	IP       string
-	Port     int
-	Protocol string
-}
-
-type IpPorts struct {
-	IP    string
-	Ports []int
-}
-
-type IpPortList struct {
-	IP    string
-	Ports []*PortProtocol
-}
-
-type PortProtocol struct {
-	Port     int
-	Protocol string
-}
-
-type TargetList struct {
-	v sync.Map
-}
-
-func NewIpPortProtocolList() *TargetList {
-	return &TargetList{
-		v: sync.Map{},
-	}
-}
-
-func (i *TargetList) Add(ip string, port int, protocol string) {
-	v, ok := i.v.Load(ip)
-	if !ok {
-		i.v.Store(ip, []*PortProtocol{
-			{
-				Port:     port,
-				Protocol: protocol,
-			},
-		})
-	} else {
-		d := v.([]*PortProtocol)
-		d = append(d, &PortProtocol{
-			Port:     port,
-			Protocol: protocol,
-		})
-		i.v.Store(ip, d)
-	}
-}
-
-func (i *TargetList) GetPortProtocolsByIp(ip string) []*PortProtocol {
-	v, ok := i.v.Load(ip)
-	if !ok {
-		return nil
-	}
-	return v.([]*PortProtocol)
-}
-
-func (i *TargetList) IpCount() int {
-	var ipLen int
-	i.v.Range(func(key, value interface{}) bool {
-		ipLen++
-		return true
-	})
-	return ipLen
-}
-
-func (i *TargetList) GetPortCountByIp(ip string) int {
-	v, ok := i.v.Load(ip)
-	if !ok {
-		return 0
-	} else {
-		return len(v.([]*PortProtocol))
-	}
-}
-
-func (i *TargetList) GetIpPorts() []*IpPortList {
-	var ipPortList []*IpPortList
-	i.v.Range(func(key, value interface{}) bool {
-		ip := key.(string)
-		ipPortList = append(ipPortList, &IpPortList{
-			IP:    ip,
-			Ports: value.([]*PortProtocol),
-		})
-		return true
-	})
-	return ipPortList
-}
-
-func (i *TargetList) GetIpPortProtocols() []*IpPortProtocol {
-	var ipPortProtocolList []*IpPortProtocol
-	i.v.Range(func(key, value interface{}) bool {
-		ip := key.(string)
-		for _, port := range value.([]*PortProtocol) {
-			ipPortProtocolList = append(ipPortProtocolList, &IpPortProtocol{
-				IP:       ip,
-				Port:     port.Port,
-				Protocol: port.Protocol,
-			})
-		}
-		return true
-	})
-	return ipPortProtocolList
-}
-
-// 生成 PDF 报告
+// GenerateReport 生成PDF报告
 func (i *AssetsVuls) GenerateReport() {
 	// 创建 PDF 实例
 	pdf := gofpdf.New("P", "mm", "A4", "")
@@ -259,7 +96,10 @@ func (i *AssetsVuls) GenerateReport() {
 	pdf.CellFormat(47.5, 10, "备注", "1", 0, "C", true, 0, "")
 	pdf.Ln(10)
 
-	for _, resp := range i.WebList {
+	for c, resp := range i.WebList {
+		if c%10 == 0 {
+			pdf.AddPage()
+		}
 		title := resp.Title
 		if title == "" {
 			title = "无标题"

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/polite007/Milkyway/internal/service/pact/protocol_scan/lib"
+	"github.com/polite007/Milkyway/internal/service/protocol_scan_vul/protocol_scan/lib"
 	"github.com/polite007/Milkyway/internal/utils/proxy"
 	"github.com/polite007/Milkyway/pkg/strutils"
 )

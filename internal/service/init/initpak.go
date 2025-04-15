@@ -1,4 +1,4 @@
-package initpak
+package init
 
 import (
 	"errors"

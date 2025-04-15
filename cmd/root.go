@@ -9,8 +9,7 @@ import (
 
 	"github.com/polite007/Milkyway/config"
 	"github.com/polite007/Milkyway/internal/cli"
-	"github.com/polite007/Milkyway/internal/common"
-	"github.com/polite007/Milkyway/internal/service/task_raw"
+	"github.com/polite007/Milkyway/internal/service/task"
 	"github.com/polite007/Milkyway/pkg/logger"
 	"github.com/spf13/cobra"
 )
@@ -51,58 +50,42 @@ func RunRoot(cmd *cobra.Command, args []string) error {
 	var (
 		ipList    []string     // ip列表
 		urlList   []string     // url列表
-		timeStart = time.Now() // 任务开始事件
+		timeStart = time.Now() // 任务开始时间
 		err       error
-
-		IpActiveList []string                 // 存活ip列表
-		IpPortList   []*common.IpPortProtocol // ip端口协议列表
 	)
-	// 解析参数
 	if err = cli.ParseArgs(cmd); err != nil {
 		return err
 	}
-	// 获取ip列表和url列表
+	config.Get().PrintDefaultUsage()
 	ipList, urlList, err = cli.ParseTarget()
 	if err != nil {
 		return err
 	}
 	if len(ipList) != 0 {
-		// ip存活探测
-		IpActiveList, err = task_raw.IpActiveScan(ipList)
-		if err != nil {
+		if config.Get().Vul.IpActiveList, err = task.IpActiveScan(ipList); err != nil {
 			return err
 		}
-		// 端口协议探测(不包含http)
-		IpPortList, err = task_raw.PortActiveScan(IpActiveList, cli.ParsePort(config.Get().Port))
-		if err != nil {
+		if config.Get().Vul.IpPortList, err = task.PortActiveScan(config.Get().Vul.IpActiveList, cli.ParsePort(config.Get().Port)); err != nil {
 			return err
 		}
-		// web探测
-		config.Get().Vul.IpPortList, config.Get().Vul.WebList, err = task_raw.WebActiveScan(IpPortList)
-		if err != nil {
+		if config.Get().Vul.IpPortList, config.Get().Vul.WebList, err = task.WebActiveScan(config.Get().Vul.IpPortList); err != nil {
 			return err
 		}
 	}
-	// 根据url探测
 	if len(urlList) != 0 {
-		WebListOne, err := task_raw.WebScanWithDomain(urlList)
-		if err != nil {
-			return err
+		if WebListOne, err := task.WebScanWithDomain(urlList); err == nil {
+			config.Get().Vul.WebList = append(config.Get().Vul.WebList, WebListOne...)
 		}
-		config.Get().Vul.WebList = append(config.Get().Vul.WebList, WebListOne...)
 	}
-	// 协议漏洞扫描
-	if err = task_raw.ProtocolVulScan(config.Get().Vul.IpPortList); err != nil {
+	if err = task.ProtocolVulScan(config.Get().Vul.IpPortList); err != nil {
 		return err
 	}
-	// web漏洞扫描
-	if err = task_raw.WebPocVulScan(config.Get().Vul.WebList); err != nil {
+	if err = task.WebPocVulScan(config.Get().Vul.WebList); err != nil {
 		return err
 	}
 	// 等待所有日志写入
 	logger.LogWaitGroup.Wait()
 	logger.OutLog(fmt.Sprintf("ScanTime: %s\n", time.Since(timeStart).String()))
-
 	// 开始报告输出
 	config.Get().Report = true // 暂时写死为true
 	if config.Get().Report {

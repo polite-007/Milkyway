@@ -1,33 +1,33 @@
-package task_raw
+package task
 
 import (
 	"fmt"
-
 	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/common"
 	"github.com/polite007/Milkyway/internal/utils/finger"
 	"github.com/polite007/Milkyway/internal/utils/httpx"
 	"github.com/polite007/Milkyway/pkg/color"
 	"github.com/polite007/Milkyway/pkg/logger"
-	"github.com/polite007/Milkyway/pkg/strutils"
 )
 
-// newWebScanTask
-func newWebScanTask(targetList []*common.IpPortProtocol) ([]*common.IpPortProtocol, []*common.Resps, error) {
+// newWebScanWithDomainTask
+func newWebScanWithDomainTask(targetUrls []string) ([]*config.Resps, error) {
 	NewPool := NewWorkPool(config.Get().WorkPoolNum)
 	NewPool.Start()
 
 	f := func(args any) (any, error) {
-		p, ok := args.(*Addr)
+		p, ok := args.(string)
 		if !ok {
 			return nil, config.GetErrors().ErrAssertion
 		}
-		isAlive, err := httpx.Get(fmt.Sprintf("http://%s:%d", p.host, p.port), nil, "/")
+		if p[len(p)-1] == '/' {
+			p = p[:len(p)-2]
+		}
+		isAlive, err := httpx.Get(p, nil, "/")
 		if err == nil && isAlive.StatusCode != 400 {
 			return httpx.HandleResponse(isAlive)
 		}
 
-		isAlive, err = httpx.Get(fmt.Sprintf("https://%s:%d", p.host, p.port), nil, "/")
+		isAlive, err = httpx.Get(p, nil, "/")
 		if err == nil && isAlive.StatusCode != 400 {
 			return httpx.HandleResponse(isAlive)
 		}
@@ -35,46 +35,26 @@ func newWebScanTask(targetList []*common.IpPortProtocol) ([]*common.IpPortProtoc
 		return nil, config.GetErrors().ErrTaskFailed
 	}
 
-	var ipPortListNotWeb []*common.IpPortProtocol
-	var ipPortList []*common.IpPortProtocol
-	var result []*common.Resps
-
 	go func() {
-		for _, ipPortProtocol := range targetList {
-			if ipPortProtocol.Protocol != "" {
-				ipPortListNotWeb = append(ipPortListNotWeb, &common.IpPortProtocol{
-					IP:       ipPortProtocol.IP,
-					Port:     ipPortProtocol.Port,
-					Protocol: ipPortProtocol.Protocol,
-				})
-				continue
-			}
+		for _, targetUrl := range targetUrls {
 			NewPool.Wg.Add(1)
-			NewPool.TaskQueue <- newTask(&Addr{
-				host: ipPortProtocol.IP,
-				port: ipPortProtocol.Port,
-			}, f)
+			NewPool.TaskQueue <- newTask(targetUrl, f)
 		}
 		close(NewPool.TaskQueue) // 关闭任务队列
 		NewPool.Wg.Wait()        // 等待消费者执行完全部任务
 		close(NewPool.Result)    // 关闭结果队列
 	}()
 
+	var result []*config.Resps
 	for res := range NewPool.Result {
 		if res == nil {
 			continue
 		}
-		resultSimple := res.(*common.Resps)
-		ip, port := strutils.SplitHost(resultSimple.Url.Host)
-		ipPortList = append(ipPortList, &common.IpPortProtocol{
-			IP:       ip,
-			Port:     port,
-			Protocol: "http",
-		})
-		resultSimple.Cms, resultSimple.Tags = finger.WebFinger(resultSimple)
+		resultSimple := res.(*config.Resps)
 		var logOut string
+		resultSimple.Cms, resultSimple.Tags = finger.WebFinger(resultSimple)
 		if resultSimple.Cms == "" {
-			logOut = fmt.Sprintf("[%s] %-25v len:%d title:%s header: %s\n",
+			logOut = fmt.Sprintf("[%s] %-25v len:%d title:%s header: %s",
 				color.Green(resultSimple.StatusCode),
 				resultSimple.Url,
 				len(resultSimple.Body),
@@ -94,8 +74,5 @@ func newWebScanTask(targetList []*common.IpPortProtocol) ([]*common.IpPortProtoc
 		logger.OutLog(logOut)
 		result = append(result, resultSimple)
 	}
-	// 合并两个map
-	ipPortList = append(ipPortList, ipPortListNotWeb...)
-
-	return ipPortList, result, nil
+	return result, nil
 }
