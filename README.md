@@ -1,3 +1,5 @@
+> 如果你觉得这款工具不错的话，求star~
+> 
 [English README](https://github.com/polite-007/Milkyway/blob/main/README_EN.md)
 <p align="center">
   <img src="static/images/Milkyway-logo.svg" width="100px" alt="milkyway">
@@ -85,17 +87,7 @@
 --poc-id   指定poc id
 ```
 
-### 基本参数使用
-
-`milkyway.exe -t 192.168.1.1/24 (端口默认是default, 排名前809个端口)`
-
-`milkyway.exe --fofa-query 'domain=baidu.com'` (fofa语句提取目标)
-
-`milkyway.exe -t 192.168.1.1/24 -s socks5://127.0.0.1:1080` (使用socks5代理)
-
-`milkyway.exe -t 192.168.1.1/24 -c 500` (设置线程池工人数量)
-
-### 演示案例
+## 0x04 演示案例
 
 1. 利用fofa进行外网全端口打点,并且使用乱序扫描
    
@@ -108,7 +100,7 @@
    
    ![img.png](./static/images/running_picture7.png)
 
-### 进阶参数使用
+## 0x05 参数使用
 
 `milkyway.exe -t 192.168.1.1/24 -p company` (使用公司常用87个端口)
 
@@ -128,7 +120,7 @@
 
 > `sql`: 常用数据库端口, `small`: 常用前12个端口, `all`: 全端口
 
-### Running Picture
+## 0x06 运行截图
 
 ![img.png](./static/images/running_picture1.png)
 
@@ -138,17 +130,17 @@
 
 ![img.png](./static/images/running_picture4.png)
 
-> 如果你觉得这款工具不错的话，求star~
-
 **特别鸣谢～FOFA官方**
 
 Milkyway 已加入 FOFA [共创者计划](https://fofa.info/development)，感谢 FOFA 提供的账号支持。
 
 <img width="318" alt="image" src="static/images/fofa.png">
 
+***
 # 参考项目
 https://github.com/shadow1ng/fscan
 
 https://github.com/EdgeSecurityTeam/EHole
 
 https://github.com/chainreactors/neutron
+
