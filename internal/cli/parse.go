@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/service/init"
+	"github.com/polite007/Milkyway/internal/service/initpak"
 	"github.com/polite007/Milkyway/internal/utils/fofa"
 	"github.com/polite007/Milkyway/pkg/fileutils"
 	"github.com/polite007/Milkyway/pkg/strutils"
@@ -176,7 +176,7 @@ func ParseArgs(cmd *cobra.Command) error {
 		configs.Port = config.PortDefault
 	}
 	// 初始化httpx代理
-	if err = init.InitHttpProxy(); err != nil {
+	if err = initpak.InitHttpProxy(); err != nil {
 		return err
 	}
 	if configs.FofaKey == "" {

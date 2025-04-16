@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/service/init"
+	"github.com/polite007/Milkyway/internal/service/initpak"
 	"github.com/polite007/Milkyway/pkg/color"
 	"github.com/polite007/Milkyway/pkg/logger"
 	"github.com/polite007/Milkyway/pkg/strutils"
@@ -97,7 +97,7 @@ func ProtocolVulScan(ipPortList []*config.IpPortProtocol) error {
 func WebPocVulScan(WebList []*config.Resps) error {
 	logger.OutLog("---------------WebPocVulScan----------------\n")
 	// 初始化poc引擎
-	if err := init.InitPocEngine(); err != nil {
+	if err := initpak.InitPocEngine(); err != nil {
 		return err
 	}
 	// 打印配置
@@ -109,7 +109,7 @@ func WebPocVulScan(WebList []*config.Resps) error {
 
 	// 匹配漏洞
 	var pocTask []*PocTask
-	for _, poc := range init.PocsList {
+	for _, poc := range initpak.PocsList {
 		for _, web := range WebList {
 			if web.StatusCode == 404 {
 				continue
