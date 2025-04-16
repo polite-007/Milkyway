@@ -4,7 +4,7 @@ import "errors"
 
 // 错误列表
 var (
-	Errors                *ErrorsList
+	errorsList            *ErrorsList
 	errAssertion          = errors.New("工人函数断言错误")
 	errTargetEmpty        = errors.New("目标为空")
 	errTaskFailed         = errors.New("任务执行失败")
@@ -23,15 +23,15 @@ type ErrorsList struct {
 
 // GetErrors 获取错误列表
 func GetErrors() *ErrorsList {
-	if Errors != nil {
-		return Errors
+	if errorsList != nil {
+		return errorsList
 	}
-	Errors = &ErrorsList{
+	errorsList = &ErrorsList{
 		ErrAssertion:          errAssertion,
 		ErrTargetEmpty:        errTargetEmpty,
 		ErrTaskFailed:         errTaskFailed,
 		ErrPortocolScanFailed: errPortocolScanFailed,
 		ErrPortNotProtocol:    errPortNotProtocol,
 	}
-	return Errors
+	return errorsList
 }

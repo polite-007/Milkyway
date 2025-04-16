@@ -24,7 +24,7 @@
     * IP & 端口存活探测
     * WEB 探测
     * 协议识别 (`mysql`,`redis`,`smb`,`ldap`,`ssh`,`vnc`,`ftp`,`smtp`, `rdp`)
-2. 爆破功能
+2. 协议爆破
    * `ssh`,`mysql`,`redis`,`vnc`
    * to be continued
 3. 漏洞检测
@@ -67,8 +67,7 @@
    `milkyway.exe --fofa-query 'domain=fofa.info||host=fofa.info' -p all --no-ping --scan-random`
 
    ![img.png](./static/images/running_picture6.png)
-
-3. 设置1000并发量使用无序扫描内网所有端口
+2. 设置1000并发量使用无序扫描内网所有端口
 
    `milkyway.exe -t 192.168.1.0/24 -p all --scan-random -c 1000 --no-ping`
    
