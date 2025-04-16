@@ -1,6 +1,5 @@
-> 如果你觉得这款工具不错的话，求star~
-> 
 [English README](https://github.com/polite-007/Milkyway/blob/main/README_EN.md)
+> 如果你觉得这款工具不错的话，求star~
 <p align="center">
   <img src="static/images/Milkyway-logo.svg" width="100px" alt="milkyway">
 </p>

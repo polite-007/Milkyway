@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	Version = "milkyway version: 0.0.8"
+	Version = "milkyway version: 0.1.0"
 )
 
 var (
