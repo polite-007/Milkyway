@@ -3,10 +3,11 @@ package config
 import (
 	"bytes"
 	"fmt"
-	"github.com/jung-kurt/gofpdf"
-	"github.com/polite007/Milkyway/static"
 	"io"
 	"time"
+
+	"github.com/jung-kurt/gofpdf"
+	"github.com/polite007/Milkyway/static"
 )
 
 // GenerateReport 生成PDF报告

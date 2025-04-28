@@ -220,6 +220,9 @@ func ExtractAndConcatenateSecondDigit(bytes []byte) int {
 			result += string(str[1])
 		}
 	}
+	if result == "" {
+		return 0
+	}
 	finalResult, err := strconv.Atoi(result)
 	if err != nil {
 		panic(err)
