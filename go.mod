@@ -12,10 +12,12 @@ require (
 	github.com/fatih/color v1.18.0
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/hashicorp/go-version v1.7.0
+	github.com/jung-kurt/gofpdf v1.16.2
 	github.com/mitchellh/go-vnc v0.0.0-20150629162542-723ed9867aed
 	github.com/nguyenthenguyen/docx v0.0.0-20230621112118-9c8e795a11db
 	github.com/spaolacci/murmur3 v1.1.0
 	github.com/spf13/cobra v1.8.1
+	github.com/stretchr/testify v1.2.2
 	github.com/weppos/publicsuffix-go v0.40.2
 	github.com/yinheli/mahonia v0.0.0-20131226213531-0eef680515cc
 	golang.org/x/crypto v0.31.0
@@ -28,9 +30,9 @@ require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/chainreactors/files v0.2.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/jung-kurt/gofpdf v1.16.2 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
