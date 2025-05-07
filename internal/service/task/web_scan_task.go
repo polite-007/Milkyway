@@ -73,7 +73,7 @@ func newWebScanTask(targetList []*config.IpPortProtocol) ([]*config.IpPortProtoc
 		resultSimple.Cms, resultSimple.Tags = finger.WebFinger(resultSimple)
 		var logOut string
 		if resultSimple.Cms == "" {
-			logOut = fmt.Sprintf("[%s] %-25v len:%d title:%s header: %s\n",
+			logOut = fmt.Sprintf("[%s] %-25v len:%d title:%s header: %s",
 				color.Green(resultSimple.StatusCode),
 				resultSimple.Url,
 				len(resultSimple.Body),
@@ -81,7 +81,7 @@ func newWebScanTask(targetList []*config.IpPortProtocol) ([]*config.IpPortProtoc
 				color.Green(resultSimple.Server),
 			)
 		} else {
-			logOut = fmt.Sprintf("[%s] %-25v len:%d title:%s header: %s cms: %s\n",
+			logOut = fmt.Sprintf("[%s] %-25v len:%d title:%s header: %s cms: %s",
 				color.Green(resultSimple.StatusCode),
 				resultSimple.Url,
 				len(resultSimple.Body),

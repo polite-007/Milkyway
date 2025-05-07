@@ -192,6 +192,7 @@ type Application struct {
 	TargetFile     string
 	OutputFileName string
 	WorkPoolNum    int
+	NoVulScan      bool
 	Report         bool        // 是否输出漏洞报告
 	Vul            *AssetsVuls // 扫描过程产生的所有数据
 

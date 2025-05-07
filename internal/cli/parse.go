@@ -14,15 +14,16 @@ import (
 )
 
 // ParseTarget 获取ip列表和url列表
-func ParseTarget() ([]string, []string, error) {
+func ParseTarget() ([]string, []string, map[string][]int, error) {
 	var (
-		configs  = config.Get()
-		errors   = config.GetErrors()
-		fofaCore = fofa.GetFofaCore(configs.FofaKey)
-		list     []string
-		ipList   []string
-		urlList  []string
-		err      error
+		configs         = config.Get()
+		errors          = config.GetErrors()
+		fofaCore        = fofa.GetFofaCore(configs.FofaKey)
+		designatedPorts = make(map[string][]int)
+		list            []string
+		ipList          []string
+		urlList         []string
+		err             error
 	)
 	if configs.FofaQuery != "" {
 		if fofaCore.FofaKey == "" {
@@ -32,29 +33,29 @@ func ParseTarget() ([]string, []string, error) {
 		fmt.Printf("你的fofa_key: %s", fofaCore.FofaKey)
 		ipList, err = fofaCore.StatsIP(configs.FofaQuery, configs.FofaSize)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
-		return ipList, nil, err
+		return ipList, nil, nil, err
 	}
 
 	if configs.TargetFile != "" {
 		list, err = fileutils.ReadLines(configs.TargetFile)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 		for _, ip := range list {
 			result, ok := strutils.IsDomain(ip)
 			if ok {
 				urlList = append(urlList, result...)
 			} else {
-				ipListSimple, err := ParseStr(strings.TrimSpace(ip))
+				ipListSimple, err := ParseStr(strings.TrimSpace(ip), designatedPorts)
 				if err != nil {
-					return nil, nil, err
+					return nil, nil, nil, err
 				}
 				ipList = strutils.UniqueAppend(ipList, ipListSimple...)
 			}
 		}
-		return ipList, urlList, nil
+		return ipList, urlList, designatedPorts, err
 	}
 
 	if configs.TargetUrl != "" {
@@ -65,18 +66,18 @@ func ParseTarget() ([]string, []string, error) {
 				urlList = append(urlList, result...)
 			}
 		}
-		return nil, urlList, nil
+		return nil, urlList, nil, err
 	}
 
 	if configs.Target != "" {
-		ipList, err = ParseStr(configs.Target)
+		ipList, err = ParseStr(configs.Target, nil)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
-		return ipList, nil, nil
+		return ipList, nil, nil, err
 	}
 
-	return nil, nil, errors.ErrTargetEmpty
+	return nil, nil, nil, errors.ErrTargetEmpty
 }
 
 // ParseArgs 解析命令行参数
@@ -159,6 +160,10 @@ func ParseArgs(cmd *cobra.Command) error {
 		return err
 	}
 	configs.PocTags, err = cmd.Flags().GetString("poc-tags")
+	if err != nil {
+		return err
+	}
+	configs.NoVulScan, err = cmd.Flags().GetBool("no-vulscan")
 	if err != nil {
 		return err
 	}

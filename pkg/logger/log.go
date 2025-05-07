@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/polite007/Milkyway/pkg/color"
 	"github.com/polite007/Milkyway/pkg/fileutils"
@@ -17,11 +20,17 @@ import (
 var (
 	// external variables
 	LogWaitGroup sync.WaitGroup
-	LogName      = "log.txt" // default log.txt
+	LogName      = fmt.Sprintf("log_%d.txt", generateSixDigitNumber()) // default log.txt
 
 	// internal variables
 	logChan = make(chan *string, 1500)
 )
+
+// 生成6位随机数
+func generateSixDigitNumber() int {
+	rand.Seed(time.Now().UnixNano())
+	return rand.Intn(900000) + 100000
+}
 
 func init() {
 	log.SetOutput(io.Discard)
@@ -30,7 +39,6 @@ func init() {
 
 func OutLog(result string) {
 	if result != "" {
-		fmt.Printf(result)
 		LogWaitGroup.Add(1)
 		logChan <- &result
 	}
@@ -39,6 +47,12 @@ func OutLog(result string) {
 func saveLog(logName string) {
 	for logout := range logChan {
 		logOutStr := *logout
+		if strings.Contains(logOutStr, "\n") {
+			fmt.Printf(logOutStr)
+		} else {
+			fmt.Println(logOutStr)
+			logOutStr += "\n"
+		}
 		_ = fileutils.WriteString(logName, color.RemoveColor(logOutStr), true)
 		LogWaitGroup.Done()
 	}

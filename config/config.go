@@ -29,6 +29,7 @@ var (
 	targetFile     string
 	outputFileName string
 	workPoolNum    int
+	noVulScan      bool
 
 	PortScanTimeout = 3 * time.Second
 )
@@ -61,6 +62,7 @@ func Get() *Application {
 		TargetFile:          targetFile,
 		OutputFileName:      outputFileName,
 		WorkPoolNum:         workPoolNum,
+		NoVulScan:           noVulScan,
 		Vul:                 &AssetsVuls{},
 		TLSHandshakeTimeout: 8 * time.Second,
 		WebScanTimeout:      10 * time.Second,
@@ -79,11 +81,18 @@ func (c *Application) CheckProxy() bool {
 
 // PrintDefaultUsage 打印默认配置信息
 func (c *Application) PrintDefaultUsage() {
-	fmt.Println(Logo)
-	fmt.Println("---------------GettingTarget----------")
-	fmt.Println("---------------Config-----------------")
+	fmt.Println("              _ ____                             ")
+	fmt.Println("   ____ ___  (_) / /____  ___      ______ ___  __")
+	fmt.Println("  / __ `__ \\/ / / //_/ / / / | /| / / __ `/ / / /")
+	fmt.Println(" / / / / / / / / ,< / /_/ /| |/ |/ / /_/ / /_/ / ")
+	fmt.Println("/_/ /_/ /_/_/_/_/|_|\\__, / |__/|__/\\__,_/\\__, /  ")
+	fmt.Println("                   /____/               /____/   ")
+	fmt.Println("                                 ", Version)
+	fmt.Println("https://github.com/polite-007/Milkyway")
+	fmt.Println("---------------Config-----------------------")
 	fmt.Printf("threads: %d\n", c.WorkPoolNum)
 	fmt.Printf("no-ping: %t\n", c.NoPing)
+	fmt.Printf("no_vulscan: %t\n", c.NoVulScan)
 	if c.OutputFileName != "" {
 		fmt.Printf("output file: %s\n", c.OutputFileName)
 	} else {
@@ -99,4 +108,5 @@ func (c *Application) PrintDefaultUsage() {
 		fmt.Printf("proxy addr: %s\n", c.Socks5Proxy)
 	}
 	fmt.Printf("scan-random: %t\n", c.ScanRandom)
+	fmt.Println("---------------GettingTarget----------------")
 }

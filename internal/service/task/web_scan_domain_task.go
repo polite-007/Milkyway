@@ -63,7 +63,7 @@ func newWebScanWithDomainTask(targetUrls []string) ([]*config.Resps, error) {
 				color.Green(resultSimple.Server),
 			)
 		} else {
-			logOut = fmt.Sprintf("[%s] %-25v len:%d title:%s header: %s cms: %s\n",
+			logOut = fmt.Sprintf("[%s] %-25v len:%d title:%s header: %s cms: %s",
 				color.Green(resultSimple.StatusCode),
 				resultSimple.Url,
 				len(resultSimple.Body),

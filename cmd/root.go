@@ -15,8 +15,8 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:          config.Name,
-	Short:        config.Logo,
+	Use: config.Name,
+	//Short:        config.Logo,
 	SilenceUsage: true,
 	RunE:         RunRoot,
 }
@@ -48,16 +48,17 @@ func Execute() {
 
 func RunRoot(cmd *cobra.Command, args []string) error {
 	var (
-		ipList    []string     // ip列表
-		urlList   []string     // url列表
-		timeStart = time.Now() // 任务开始时间
-		err       error
+		ipList          []string // ip列表
+		urlList         []string // url列表
+		DesignatedPorts map[string][]int
+		timeStart       = time.Now() // 任务开始时间
+		err             error
 	)
 	if err = cli.ParseArgs(cmd); err != nil {
 		return err
 	}
 	config.Get().PrintDefaultUsage()
-	ipList, urlList, err = cli.ParseTarget()
+	ipList, urlList, DesignatedPorts, err = cli.ParseTarget()
 	if err != nil {
 		return err
 	}
@@ -65,7 +66,7 @@ func RunRoot(cmd *cobra.Command, args []string) error {
 		if config.Get().Vul.IpActiveList, err = task.IpActiveScan(ipList); err != nil {
 			return err
 		}
-		if config.Get().Vul.IpPortList, err = task.PortActiveScan(config.Get().Vul.IpActiveList, cli.ParsePort(config.Get().Port)); err != nil {
+		if config.Get().Vul.IpPortList, err = task.PortActiveScan(config.Get().Vul.IpActiveList, cli.ParsePort(config.Get().Port), DesignatedPorts); err != nil {
 			return err
 		}
 		if config.Get().Vul.IpPortList, config.Get().Vul.WebList, err = task.WebActiveScan(config.Get().Vul.IpPortList); err != nil {
@@ -77,17 +78,19 @@ func RunRoot(cmd *cobra.Command, args []string) error {
 			config.Get().Vul.WebList = append(config.Get().Vul.WebList, WebListOne...)
 		}
 	}
-	if err = task.ProtocolVulScan(config.Get().Vul.IpPortList); err != nil {
-		return err
-	}
-	if err = task.WebPocVulScan(config.Get().Vul.WebList); err != nil {
-		return err
+	if !config.Get().NoVulScan {
+		if err = task.ProtocolVulScan(config.Get().Vul.IpPortList); err != nil {
+			return err
+		}
+		if err = task.WebPocVulScan(config.Get().Vul.WebList); err != nil {
+			return err
+		}
 	}
 	// 等待所有日志写入
 	logger.LogWaitGroup.Wait()
 	logger.OutLog(fmt.Sprintf("ScanTime: %s\n", time.Since(timeStart).String()))
 	// 开始报告输出
-	config.Get().Report = true // 暂时写死为true
+	config.Get().Report = false // 暂时写死为false
 	if config.Get().Report {
 		config.Get().Vul.GenerateReport()
 	}
@@ -95,6 +98,7 @@ func RunRoot(cmd *cobra.Command, args []string) error {
 }
 
 func init() {
+	rootCmd.Flags().BoolP("no-vulscan", "x", false, "Skip the VUL SCAN")
 	rootCmd.Flags().BoolP("scan-random", "r", false, "Randomize the order of ports scan")
 	rootCmd.Flags().StringP("finger-file", "w", "", "Path to the file containing fingerprint rules")
 	rootCmd.Flags().IntP("fofa-size", "z", 100, "Maximum number of results to retrieve from Fofa")

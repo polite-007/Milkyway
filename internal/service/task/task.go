@@ -46,7 +46,7 @@ func IpActiveScan(ips []string) ([]string, error) {
 //   - []*common.IpPortProtocol: 扫描到的活跃IP、端口和协议信息列表。
 //   - error: 如果扫描过程中发生错误，则返回错误信息；否则返回nil。
 
-func PortActiveScan(ips []string, port []int) ([]*config.IpPortProtocol, error) {
+func PortActiveScan(ips []string, port []int, DesignatedPorts map[string][]int) ([]*config.IpPortProtocol, error) {
 	logger.OutLog("---------------PortActiveScan---------------\n")
 	var (
 		portScanTaskList []*config.IpPorts
@@ -54,9 +54,15 @@ func PortActiveScan(ips []string, port []int) ([]*config.IpPortProtocol, error) 
 		err              error
 	)
 	for _, ip := range ips {
+		targetPort := port
+		if DesignatedPorts != nil {
+			if targetPortTemp, ok := DesignatedPorts[ip]; ok {
+				targetPort = targetPortTemp
+			}
+		}
 		portScanTaskList = append(portScanTaskList, &config.IpPorts{
 			IP:    ip,
-			Ports: port,
+			Ports: targetPort,
 		})
 	}
 	if config.Get().ScanRandom {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/bits"
 	"net"
+	"strconv"
 	"strings"
 )
 
@@ -129,8 +130,21 @@ func ipCIDRToList(cidr string) ([]string, error) {
 	return ipList, nil
 }
 
-func IPPORTToList(str string) ([]string, error) {
-	return []string{strings.Split(str, ":")[0]}, nil
+func IPPORTToList(str string, designatedPorts map[string][]int) ([]string, error) {
+	ip := strings.Split(str, ":")[0]
+	portRaw := strings.Split(str, ":")[1]
+	port, err := strconv.Atoi(portRaw)
+	if err != nil {
+		return []string{ip}, nil
+	}
+	if designatedPorts != nil {
+		if portsTemp, ok := designatedPorts[ip]; ok {
+			designatedPorts[ip] = append(portsTemp, port)
+		} else {
+			designatedPorts[ip] = []int{port}
+		}
+	}
+	return []string{ip}, nil
 }
 
 // checkIPFormat 判断输入的字符串是否是单个IP地址(0)、CIDR格式(1)、IP范围格式(2), IP+Port格式(3)
@@ -170,7 +184,7 @@ func checkIPFormat(str string) (int, error) {
 }
 
 // ParseStr 将字符串解析为IP地址列表
-func ParseStr(str string) ([]string, error) {
+func ParseStr(str string, designatedPorts map[string][]int) ([]string, error) {
 	res, err := checkIPFormat(str)
 	if err != nil {
 		fmt.Printf("该字符串无法识别,已跳过: %s\n", str)
@@ -184,7 +198,7 @@ func ParseStr(str string) ([]string, error) {
 	case 2:
 		return ipRangeToList(strings.Split(str, "-")[0], strings.Split(str, "-")[1])
 	case 3:
-		return IPPORTToList(str)
+		return IPPORTToList(str, designatedPorts)
 	default:
 		return nil, nil
 	}
