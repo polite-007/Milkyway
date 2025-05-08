@@ -167,6 +167,14 @@ func ParseArgs(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
+	configs.NoDirScan, err = cmd.Flags().GetBool("no-dirscan")
+	if err != nil {
+		return err
+	}
+	configs.DirDictFile, err = cmd.Flags().GetString("dir-file")
+	if err != nil {
+		return err
+	}
 
 	switch configs.Port {
 	case "all":

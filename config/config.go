@@ -30,6 +30,8 @@ var (
 	outputFileName string
 	workPoolNum    int
 	noVulScan      bool
+	noDirScan      bool
+	dirDictFile    string
 
 	PortScanTimeout = 3 * time.Second
 )
@@ -63,6 +65,8 @@ func Get() *Application {
 		OutputFileName:      outputFileName,
 		WorkPoolNum:         workPoolNum,
 		NoVulScan:           noVulScan,
+		NoDirScan:           noDirScan,
+		DirDictFile:         dirDictFile,
 		Vul:                 &AssetsVuls{},
 		TLSHandshakeTimeout: 8 * time.Second,
 		WebScanTimeout:      10 * time.Second,
@@ -88,11 +92,12 @@ func (c *Application) PrintDefaultUsage() {
 	fmt.Println("/_/ /_/ /_/_/_/_/|_|\\__, / |__/|__/\\__,_/\\__, /  ")
 	fmt.Println("                   /____/               /____/   ")
 	fmt.Println("                                 ", Version)
-	fmt.Println("https://github.com/polite-007/Milkyway")
+	fmt.Println("                                 https://github.com/polite-007/Milkyway")
 	fmt.Println("---------------Config-----------------------")
 	fmt.Printf("threads: %d\n", c.WorkPoolNum)
 	fmt.Printf("no-ping: %t\n", c.NoPing)
 	fmt.Printf("no_vulscan: %t\n", c.NoVulScan)
+	fmt.Printf("no_dirscan: %t\n", c.NoDirScan)
 	if c.OutputFileName != "" {
 		fmt.Printf("output file: %s\n", c.OutputFileName)
 	} else {

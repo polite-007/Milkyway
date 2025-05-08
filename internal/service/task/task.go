@@ -2,6 +2,8 @@ package task
 
 import (
 	"fmt"
+	"github.com/polite007/Milkyway/pkg/fileutils"
+	"github.com/polite007/Milkyway/static"
 	"strings"
 
 	"github.com/polite007/Milkyway/config"
@@ -149,4 +151,32 @@ func WebPocVulScan(WebList []*config.Resps) error {
 	}
 	logger.OutLog(fmt.Sprintf("[*] 下发%d个漏洞扫描任务\n", len(pocTask)))
 	return newWebPocVulScan(pocTask)
+}
+
+func DirScan(targetListRaw []*config.Resps) ([]*config.Resps, error) {
+	logger.OutLog("---------------DirScan----------------------\n")
+	var (
+		targetList  []string
+		dirListByte []byte
+		dirList     []string
+		err         error
+	)
+	if dirListByte, err = static.EmbedFS.ReadFile("dict/dir.txt"); err != nil {
+		return nil, err
+	} else {
+		dirList = strings.Split(string(dirListByte), "\n")
+	}
+	if config.Get().DirDictFile != "" {
+		dirList, err = fileutils.ReadLines(config.Get().DirDictFile)
+		if err != nil {
+			return nil, err
+		}
+	}
+	logger.OutLog(fmt.Sprintf("[*] 读取字典文件成功,字典数量为%d\n", len(dirList)))
+	for _, web := range targetListRaw {
+		if web.StatusCode == 404 || web.StatusCode == 403 || web.StatusCode == 400 || (web.StatusCode == 200 && len(web.Body) < 100) {
+			targetList = append(targetList, web.Url.String())
+		}
+	}
+	return newDirScanTask(targetList, dirList)
 }

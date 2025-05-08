@@ -2,38 +2,51 @@ package task
 
 import (
 	"fmt"
-
 	"github.com/polite007/Milkyway/config"
 	"github.com/polite007/Milkyway/internal/utils/finger"
 	"github.com/polite007/Milkyway/internal/utils/httpx"
 	"github.com/polite007/Milkyway/pkg/color"
 	"github.com/polite007/Milkyway/pkg/logger"
+	"strings"
 )
 
-// newWebScanWithDomainTask
-func newWebScanWithDomainTask(targetUrls []string) ([]*config.Resps, error) {
+func newDirScanTask(targetList []string, dirList []string) ([]*config.Resps, error) {
 	NewPool := NewWorkPool(config.Get().WorkPoolNum)
 	NewPool.Start()
 
+	type HostPath struct {
+		host string
+		path string
+	}
+
 	f := func(args any) (any, error) {
-		p, ok := args.(string)
+		p, ok := args.(HostPath)
 		if !ok {
 			return nil, config.GetErrors().ErrAssertion
 		}
-		if p[len(p)-1] == '/' {
-			p = p[:len(p)-2]
+		if p.host[len(p.host)-1] == '/' {
+			p.host = p.host[:len(p.host)-2]
 		}
-		isAlive, err := httpx.Get(p, nil, "/")
-		if err == nil && isAlive.StatusCode != 400 {
+		isAlive, err := httpx.Get(p.host, nil, p.path)
+		if err == nil && (isAlive.StatusCode == 200 || isAlive.StatusCode == 302 || isAlive.StatusCode == 301) {
 			return httpx.HandleResponse(isAlive)
 		}
 		return nil, config.GetErrors().ErrTaskFailed
 	}
 
 	go func() {
-		for _, targetUrl := range targetUrls {
-			NewPool.Wg.Add(1)
-			NewPool.TaskQueue <- newTask(targetUrl, f)
+		for _, dir := range dirList {
+			if dir == "" {
+				continue
+			}
+			for _, targetUrl := range targetList {
+				hostPath := HostPath{
+					host: strings.TrimRight(targetUrl, "/"),
+					path: "/" + strings.Trim(strings.Trim(dir, "/"), "\r"),
+				}
+				NewPool.Wg.Add(1)
+				NewPool.TaskQueue <- newTask(hostPath, f)
+			}
 		}
 		close(NewPool.TaskQueue) // 关闭任务队列
 		NewPool.Wg.Wait()        // 等待消费者执行完全部任务

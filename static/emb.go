@@ -4,7 +4,7 @@ import (
 	"embed"
 )
 
-//go:embed finger/finger_new.json poc_all ttf/STFANGSO.TTF
+//go:embed finger/finger_new.json poc_all ttf/STFANGSO.TTF dict
 var EmbedFS embed.FS
 
 // 误报的poc

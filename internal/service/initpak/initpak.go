@@ -42,7 +42,7 @@ func InitHttpProxy() error {
 
 // 为nuclei poc引擎初始化，扫描漏洞前必须进行的
 func InitPocEngine() error {
-	fmt.Printf("[*] 初始化poc库\n")
+	// fmt.Printf("[*] 初始化poc库\n")
 	if err := initNucleiPocList("poc_all"); err != nil {
 		return err
 	}

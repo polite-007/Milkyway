@@ -48,7 +48,7 @@ func Get(host string, header map[string]string, path string) (*http.Response, er
 		req.Header.Set(i, v)
 	}
 	resp, err := client.Do(req)
-	if err != nil {
+	if err != nil || resp == nil {
 		return nil, fmt.Errorf("请求失败: %v", err)
 	}
 	return resp, nil

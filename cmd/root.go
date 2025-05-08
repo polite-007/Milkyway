@@ -15,8 +15,8 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use: config.Name,
-	//Short:        config.Logo,
+	Use:          config.Name,
+	Short:        config.Logo,
 	SilenceUsage: true,
 	RunE:         RunRoot,
 }
@@ -74,8 +74,13 @@ func RunRoot(cmd *cobra.Command, args []string) error {
 		}
 	}
 	if len(urlList) != 0 {
-		if WebListOne, err := task.WebScanWithDomain(urlList); err == nil {
-			config.Get().Vul.WebList = append(config.Get().Vul.WebList, WebListOne...)
+		if WebListTemp, err := task.WebScanWithDomain(urlList); err == nil {
+			config.Get().Vul.WebList = append(config.Get().Vul.WebList, WebListTemp...)
+		}
+	}
+	if !config.Get().NoDirScan {
+		if WebListTemp, err := task.DirScan(config.Get().Vul.WebList); err == nil {
+			config.Get().Vul.WebList = append(config.Get().Vul.WebList, WebListTemp...)
 		}
 	}
 	if !config.Get().NoVulScan {
@@ -98,6 +103,8 @@ func RunRoot(cmd *cobra.Command, args []string) error {
 }
 
 func init() {
+	rootCmd.Flags().BoolP("no-dirscan", "a", false, "Skip the VUL SCAN")
+	rootCmd.Flags().StringP("dir-file", "b", "", "Randomize the order of ports scan")
 	rootCmd.Flags().BoolP("no-vulscan", "x", false, "Skip the VUL SCAN")
 	rootCmd.Flags().BoolP("scan-random", "r", false, "Randomize the order of ports scan")
 	rootCmd.Flags().StringP("finger-file", "w", "", "Path to the file containing fingerprint rules")
