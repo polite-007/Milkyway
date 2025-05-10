@@ -28,7 +28,7 @@ func newDirScanTask(targetList []string, dirList []string) ([]*config.Resps, err
 			p.host = p.host[:len(p.host)-2]
 		}
 		isAlive, err := httpx.Get(p.host, nil, p.path)
-		if err == nil && (isAlive.StatusCode == 200 || isAlive.StatusCode == 302 || isAlive.StatusCode == 301) {
+		if err == nil && isAlive.StatusCode == 200 {
 			return httpx.HandleResponse(isAlive)
 		}
 		return nil, config.GetErrors().ErrTaskFailed

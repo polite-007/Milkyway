@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	dialTimout = 5 * time.Second
-	keepAlive  = 5 * time.Second
+	dialTimout = 7 * time.Second
+	keepAlive  = 10 * time.Second
 	dialer     = &net.Dialer{
 		Timeout:   dialTimout,
 		KeepAlive: keepAlive,
@@ -29,8 +29,8 @@ var client = &http.Client{
 
 var defaultTransport = &http.Transport{
 	DialContext:         dialer.DialContext,
-	MaxConnsPerHost:     5,
-	MaxIdleConns:        0,
+	MaxConnsPerHost:     config.Get().WorkPoolNum,
+	MaxIdleConns:        config.Get().WorkPoolNum,
 	MaxIdleConnsPerHost: config.Get().WorkPoolNum,
 	IdleConnTimeout:     keepAlive,
 	TLSClientConfig:     &tls.Config{MinVersion: tls.VersionTLS10, InsecureSkipVerify: true},

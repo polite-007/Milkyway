@@ -92,7 +92,7 @@ func (c *Application) PrintDefaultUsage() {
 	fmt.Println("/_/ /_/ /_/_/_/_/|_|\\__, / |__/|__/\\__,_/\\__, /  ")
 	fmt.Println("                   /____/               /____/   ")
 	fmt.Println("                                 ", Version)
-	fmt.Println("                                 https://github.com/polite-007/Milkyway")
+	fmt.Println("                                https://github.com/polite-007/Milkyway")
 	fmt.Println("---------------Config-----------------------")
 	fmt.Printf("threads: %d\n", c.WorkPoolNum)
 	fmt.Printf("no-ping: %t\n", c.NoPing)
