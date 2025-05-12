@@ -21,18 +21,18 @@ func mysqlConn(ip string, port int, user, pass string) error {
 	})
 
 	Host, Port, Username, Password := ip, port, user, pass
-	dataSourceName := fmt.Sprintf("%v:%v@tcp(%v:%v)/mysql?charset=utf8&timeout=%v", Username, Password, Host, Port, config.PortScanTimeout)
+	dataSourceName := fmt.Sprintf("%v:%v@tcp(%v:%v)/mysql?charset=utf8&timeout=%v", Username, Password, Host, Port, config.Get().PortScanTimeout)
 	db, err := sql.Open("mysql", dataSourceName)
 	if err == nil {
-		db.SetConnMaxLifetime(config.PortScanTimeout)
-		db.SetConnMaxIdleTime(config.PortScanTimeout)
+		db.SetConnMaxLifetime(config.Get().PortScanTimeout)
+		db.SetConnMaxIdleTime(config.Get().PortScanTimeout)
 		db.SetMaxIdleConns(0)
 		defer db.Close()
 		err = db.Ping()
 		if err == nil {
 			result := fmt.Sprintf("[%s] %v:%v %v:%v\n", color.Red("mysql"), Host, Port, color.Red(Username), color.Red(Password))
 			logger.OutLog(result)
-			config.Get().Vul.AddProtocolVul(Host, port, "mysql", fmt.Sprintf("%v:%v", Username, Password))
+			config.Get().Result.AddProtocolVul(Host, port, "mysql", fmt.Sprintf("%v:%v", Username, Password))
 		} else {
 			return err
 		}

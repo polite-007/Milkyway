@@ -3,7 +3,6 @@ package config
 import (
 	"net/url"
 	"sync"
-	"time"
 )
 
 // todo 存放通用结构体
@@ -41,7 +40,7 @@ type WebVul struct {
 	Recovery    string // 漏洞修复意见
 }
 
-type AssetsVuls struct {
+type AssetsResult struct {
 	IpActiveList []string          // 存活的ip列表
 	WebList      []*Resps          // Web 列表
 	IpPortList   []*IpPortProtocol // IpPort 列表
@@ -50,7 +49,7 @@ type AssetsVuls struct {
 }
 
 // AddProtocolVul 添加协议漏洞
-func (i *AssetsVuls) AddProtocolVul(ip string, port int, protocol string, message string) {
+func (i *AssetsResult) AddProtocolVul(ip string, port int, protocol string, message string) {
 	i.ProtocolVul = append(i.ProtocolVul, &ProtocolVul{
 		IP:       ip,
 		Port:     port,
@@ -60,7 +59,7 @@ func (i *AssetsVuls) AddProtocolVul(ip string, port int, protocol string, messag
 }
 
 // AddWebVul 添加 Web 漏洞
-func (i *AssetsVuls) AddWebVul(vulUrl, vulName, des, recovery, level string) {
+func (i *AssetsResult) AddWebVul(vulUrl, vulName, des, recovery, level string) {
 	i.WebVul = append(i.WebVul, &WebVul{
 		VulUrl:      vulUrl,
 		VulName:     vulName,
@@ -168,40 +167,3 @@ func (i *TargetList) GetIpPortProtocols() []*IpPortProtocol {
 	})
 	return ipPortProtocolList
 }
-
-type Application struct {
-	SC             string
-	PocId          string
-	PocTags        string
-	FingerMatch    bool
-	FingerFile     string
-	PocFile        string
-	NoPing         bool
-	FullScan       bool
-	SshKey         string
-	Verbose        bool
-	FofaQuery      string
-	FofaSize       int
-	FofaKey        string
-	ScanRandom     bool
-	HttpProxy      string
-	Socks5Proxy    string
-	Port           string
-	Target         string
-	TargetUrl      string
-	TargetFile     string
-	OutputFileName string
-	WorkPoolNum    int
-	NoVulScan      bool
-	Report         bool // 是否输出漏洞报告
-	DirDictFile    string
-	NoDirScan      bool
-	Vul            *AssetsVuls // 扫描过程产生的所有数据
-
-	TLSHandshakeTimeout time.Duration
-	WebScanTimeout      time.Duration
-	PortScanTimeout     time.Duration
-	ICMPTimeOut         time.Duration
-}
-
-var application *Application

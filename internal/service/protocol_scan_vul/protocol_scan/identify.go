@@ -89,7 +89,7 @@ func protocolScan(host string, port int) (string, string, error) {
 			protocol string
 			ok       bool
 		)
-		if protocol, ok = config.PortGroupMapNew[port]; !ok {
+		if protocol, ok = config.GetPorts().PortGroupMapNew[port]; !ok {
 			return "", "", config.GetErrors().ErrPortNotProtocol
 		}
 		switch protocol {

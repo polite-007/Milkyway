@@ -2,15 +2,15 @@ package config
 
 // 内置协议爆破词典
 var (
-	userMysql     = []string{"root", "admin"}
-	passwordMysql = []string{"", "root", "123456", "password", "qweasd", "QWE123qwe", "qweasdzxc", "123qwe", "123QWE"}
+	userMysql     = []string{"root", "admin", "test"}
+	passwordMysql = []string{"", "root", "123456", "password", "qweasd", "QWE123qwe", "qweasdzxc", "123qwe", "123QWE", "Admin123", "admin123"}
 
 	passwordRedis = []string{"", "root", "123456", "password", "12345678", "redis", "QWE123qwe"}
 
-	userSsh     = []string{"root", "myuser"}
-	passwordSsh = []string{"", "root", "123456", "password", "12345678", "QWE123qwe", "mypassword", "123qwe", "123QWE"}
+	userSsh     = []string{"root", "myuser", "test"}
+	passwordSsh = []string{"", "root", "123456", "password", "12345678", "QWE123qwe", "mypassword", "123qwe", "123QWE", "Admin123", "admin123"}
 
-	passwordVnc = []string{"", "root", "123456", "password", "12345678", "QWE123qwe", "vnc", "123qwe", "123QWE"}
+	passwordVnc = []string{"", "root", "123456", "password", "12345678", "QWE123qwe", "vnc", "123qwe", "123QWE", "Admin123", "admin123"}
 )
 
 // Dict 爆破词典结构体

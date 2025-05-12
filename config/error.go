@@ -2,6 +2,15 @@ package config
 
 import "errors"
 
+// ErrorsList 错误列表结构体
+type ErrorsList struct {
+	ErrAssertion          error
+	ErrTargetEmpty        error
+	ErrTaskFailed         error
+	ErrPortocolScanFailed error
+	ErrPortNotProtocol    error
+}
+
 // 错误列表
 var (
 	errorsList            *ErrorsList
@@ -11,15 +20,6 @@ var (
 	errPortocolScanFailed = errors.New("全协议扫描失败")
 	errPortNotProtocol    = errors.New("端口号没有对应的协议")
 )
-
-// ErrorsList 错误列表结构体
-type ErrorsList struct {
-	ErrAssertion          error
-	ErrTargetEmpty        error
-	ErrTaskFailed         error
-	ErrPortocolScanFailed error
-	ErrPortNotProtocol    error
-}
 
 // GetErrors 获取错误列表
 func GetErrors() *ErrorsList {

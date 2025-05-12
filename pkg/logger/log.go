@@ -44,6 +44,28 @@ func OutLog(result string) {
 	}
 }
 
+func OutLogInfo(result string) {
+	if result != "" {
+		result = fmt.Sprintf("[%s] %s", color.Yellow("INFO"), color.Green(result))
+		LogWaitGroup.Add(1)
+		logChan <- &result
+	}
+}
+
+func OutLogError(result string) {
+	if result != "" {
+		result = fmt.Sprintf("[%s] %s", color.Red("ERROR"), color.Green(result))
+		LogWaitGroup.Add(1)
+	}
+}
+
+func OutLogSuccess(result string) {
+	if result != "" {
+		result = fmt.Sprintf("[%s] %s", color.Green("OK"), color.Green(result))
+		LogWaitGroup.Add(1)
+	}
+}
+
 func saveLog(logName string) {
 	for logout := range logChan {
 		logOutStr := *logout

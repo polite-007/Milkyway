@@ -1,199 +1,82 @@
 package cli
 
 import (
-	"fmt"
-	"os"
-	"strings"
-
 	"github.com/polite007/Milkyway/config"
 	"github.com/polite007/Milkyway/internal/service/initpak"
-	"github.com/polite007/Milkyway/internal/utils/fofa"
-	"github.com/polite007/Milkyway/pkg/fileutils"
-	"github.com/polite007/Milkyway/pkg/strutils"
-	"github.com/spf13/cobra"
+	"github.com/projectdiscovery/goflags"
+	"os"
 )
 
-// ParseTarget 获取ip列表和url列表
-func ParseTarget() ([]string, []string, map[string][]int, error) {
-	var (
-		configs         = config.Get()
-		errors          = config.GetErrors()
-		fofaCore        = fofa.GetFofaCore(configs.FofaKey)
-		designatedPorts = make(map[string][]int)
-		list            []string
-		ipList          []string
-		urlList         []string
-		err             error
-	)
-	if configs.FofaQuery != "" {
-		if fofaCore.FofaKey == "" {
-			panic("fofa_key为空或者不可用")
-		}
-		fmt.Printf("正在使用从fofa获取目标... \nfofa query: %s\n", config.Get().FofaQuery)
-		fmt.Printf("你的fofa_key: %s", fofaCore.FofaKey)
-		ipList, err = fofaCore.StatsIP(configs.FofaQuery, configs.FofaSize)
-		if err != nil {
-			return nil, nil, nil, err
-		}
-		return ipList, nil, nil, err
-	}
-
-	if configs.TargetFile != "" {
-		list, err = fileutils.ReadLines(configs.TargetFile)
-		if err != nil {
-			return nil, nil, nil, err
-		}
-		for _, ip := range list {
-			result, ok := strutils.IsDomain(ip)
-			if ok {
-				urlList = append(urlList, result...)
-			} else {
-				ipListSimple, err := ParseStr(strings.TrimSpace(ip), designatedPorts)
-				if err != nil {
-					return nil, nil, nil, err
-				}
-				ipList = strutils.UniqueAppend(ipList, ipListSimple...)
-			}
-		}
-		return ipList, urlList, designatedPorts, err
-	}
-
-	if configs.TargetUrl != "" {
-		urlListRaw := strings.Split(configs.TargetUrl, ",")
-		for _, urlSimple := range urlListRaw {
-			result, ok := strutils.IsDomain(urlSimple)
-			if ok {
-				urlList = append(urlList, result...)
-			}
-		}
-		return nil, urlList, nil, err
-	}
-
-	if configs.Target != "" {
-		ipList, err = ParseStr(configs.Target, nil)
-		if err != nil {
-			return nil, nil, nil, err
-		}
-		return ipList, nil, nil, err
-	}
-
-	return nil, nil, nil, errors.ErrTargetEmpty
-}
-
 // ParseArgs 解析命令行参数
-func ParseArgs(cmd *cobra.Command) error {
+func ParseArgs() error {
 	var (
-		configs = config.Get()
+		options = config.Get()
 		err     error
 	)
-	if configs.ScanRandom, err = cmd.Flags().GetBool("scan-random"); err != nil {
+	flagSet := goflags.NewFlagSet()
+	flagSet.SetDescription(config.Logo)
+	// Input
+	flagSet.CreateGroup("input", "Input",
+		flagSet.StringVarP(&options.Target, "target", "t", "", "target to scan ('ip', 'cidr', 'ip segment')"),
+		flagSet.StringVarP(&options.TargetUrl, "url", "u", "", "url to scan ('baidu.com')"),
+		flagSet.StringVarP(&options.TargetFile, "exclude", "f", "", "target file to scan ('target.txt')"),
+		flagSet.StringVarP(&options.FofaQuery, "query", "q", "", "fofa query to scan ('domain=baidu.com')"),
+	)
+	// Port
+	flagSet.CreateGroup("port", "Port",
+		flagSet.StringVarP(&options.Port, "port", "p", "default", "target port to scan ('small', 'company', 'all')"),
+	)
+	// Proxy
+	flagSet.CreateGroup("proxy", "Proxy",
+		flagSet.StringVarP(&options.HttpProxy, "http-proxy", "proxy", "", "http proxy ('http://127.0.0.1:8080')"),
+		flagSet.StringVarP(&options.Socks5Proxy, "socks5", "s", "", "socks5 proxy ('socks5://127.0.0.1:8080')"),
+	)
+	// Scan Mode
+	flagSet.CreateGroup("scan mode", "Scan Mode",
+		flagSet.IntVarP(&options.WorkPoolNum, "concurrent", "c", 500, ""),
+		flagSet.BoolVarP(&options.ScanRandom, "random", "r", false, ""),
+		flagSet.StringVarP(&options.FofaKey, "fofa-key", "fk", "", "fofa key"),
+		flagSet.IntVarP(&options.FofaSize, "fofa-size", "fs", 100, "fofa size"),
+		flagSet.BoolVarP(&options.NoPing, "no-ping", "np", false, "skip the icmp/ping scan"),
+		flagSet.BoolVarP(&options.NoDirScan, "no-dir", "nd", false, "skip the dir scan"), flagSet.BoolVarP(&options.Verbose, "verbose", "v", false, "show verbose output with protocol"),
+		flagSet.BoolVarP(&options.FullScan, "full-scan", "fc", false, "fully detect protocols on open ports.By default,only common ones like 22-SSH and 3306-MySQL are identified"),
+	)
+	// Vul Mode
+	flagSet.CreateGroup("vul mode", "Vul Mode",
+		flagSet.BoolVarP(&options.NoVulScan, "no-vul", "nv", false, "skip the vul scan"),
+		flagSet.BoolVarP(&options.FingerMatch, "no-match", "nm", false, "fingerprint rule matching prior to vulnerability scanning"),
+		flagSet.StringVarP(&options.PocTags, "poc-tags", "pt", "", "comma-separated list of poc tags to scan for"),
+		flagSet.StringVarP(&options.PocId, "poc-id", "pi", "", " poc id to scan for"),
+	)
+	// File Mod
+	flagSet.CreateGroup("file mode", "File Mode",
+		flagSet.StringVarP(&options.FingerFile, "finger-file", "ff", "", "path to the file containing fingerprint rules"),
+		flagSet.StringVarP(&options.PocFile, "poc-file", "pf", "", "path to the file containing custom POCs (File Or Dir)"),
+		flagSet.StringVarP(&options.DirDictFile, "dir-file", "df", "", "path to the file containing dir scan dict"),
+	)
+	if err = flagSet.Parse(); err != nil {
 		return err
 	}
-	if configs.FingerFile, err = cmd.Flags().GetString("finger-file"); err != nil {
-		return err
-	}
-	if configs.FofaKey, err = cmd.Flags().GetString("fofa-key"); err != nil {
-		return err
-	}
-	configs.FofaSize, err = cmd.Flags().GetInt("fofa-size")
-	if err != nil {
-		return err
-	}
-	configs.NoPing, err = cmd.Flags().GetBool("no-ping")
-	if err != nil {
-		return err
-	}
-	configs.FingerMatch, err = cmd.Flags().GetBool("no-match")
-	if err != nil {
-		return err
-	}
-	configs.PocFile, err = cmd.Flags().GetString("poc-file")
-	if err != nil {
-		return err
-	}
-	configs.OutputFileName, err = cmd.Flags().GetString("output")
-	if err != nil {
-		return err
-	}
-	configs.Socks5Proxy, err = cmd.Flags().GetString("socks5")
-	if err != nil {
-		return err
-	}
-	configs.WorkPoolNum, err = cmd.Flags().GetInt("concurrent")
-	if err != nil {
-		return err
-	}
-	configs.Target, err = cmd.Flags().GetString("target")
-	if err != nil {
-		return err
-	}
-	configs.TargetFile, err = cmd.Flags().GetString("file")
-	if err != nil {
-		return err
-	}
-	configs.HttpProxy, err = cmd.Flags().GetString("http-proxy")
-	if err != nil {
-		return err
-	}
-	configs.Port, err = cmd.Flags().GetString("port")
-	if err != nil {
-		return err
-	}
-	configs.TargetUrl, err = cmd.Flags().GetString("url")
-	if err != nil {
-		return err
-	}
-	configs.FofaQuery, err = cmd.Flags().GetString("fofa-query")
-	if err != nil {
-		return err
-	}
-	configs.Verbose, err = cmd.Flags().GetBool("verbose")
-	if err != nil {
-		return err
-	}
-	configs.FullScan, err = cmd.Flags().GetBool("full-scan")
-	if err != nil {
-		return err
-	}
-	configs.PocId, err = cmd.Flags().GetString("poc-id")
-	if err != nil {
-		return err
-	}
-	configs.PocTags, err = cmd.Flags().GetString("poc-tags")
-	if err != nil {
-		return err
-	}
-	configs.NoVulScan, err = cmd.Flags().GetBool("no-vulscan")
-	if err != nil {
-		return err
-	}
-	configs.NoDirScan, err = cmd.Flags().GetBool("no-dirscan")
-	if err != nil {
-		return err
-	}
-	configs.DirDictFile, err = cmd.Flags().GetString("dir-file")
-	if err != nil {
-		return err
-	}
-
-	switch configs.Port {
+	// 配置端口变量
+	switch options.Port {
 	case "all":
-		configs.Port = config.PortAll
+		options.Port = config.GetPorts().PortAll
 	case "small":
-		configs.Port = config.PortSmall
+		options.Port = config.GetPorts().PortSmall
 	case "company":
-		configs.Port = config.PortCompany
+		options.Port = config.GetPorts().PortCompany
 	case "sql":
-		configs.Port = config.PortSql
+		options.Port = config.GetPorts().PortSql
 	case "default":
-		configs.Port = config.PortDefault
+		options.Port = config.GetPorts().PortDefault
 	}
 	// 初始化httpx代理
 	if err = initpak.InitHttpProxy(); err != nil {
 		return err
 	}
-	if configs.FofaKey == "" {
-		configs.FofaKey = os.Getenv("FOFA_KEY")
+	// 如果fofa key, 取系统变量 FOFA_KEY
+	if options.FofaKey == "" {
+		options.FofaKey = os.Getenv("FOFA_KEY")
 	}
 	return nil
 }

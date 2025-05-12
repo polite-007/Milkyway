@@ -13,13 +13,12 @@ func newPortScanTask(ipPortList []*config.IpPorts) (*config.TargetList, error) {
 	var PortScanTask []*Addr
 	NewPool := NewWorkPool(config.Get().WorkPoolNum)
 	NewPool.Start()
-
 	f := func(args any) (any, error) {
 		p, ok := args.(*Addr)
 		if !ok {
 			return nil, config.GetErrors().ErrAssertion
 		}
-		protocol, isAlive := protocol_scan.PortScan(p.host, p.port, config.PortScanTimeout)
+		protocol, isAlive := protocol_scan.PortScan(p.host, p.port, config.Get().PortScanTimeout)
 		if !isAlive {
 			return nil, nil
 		} else {
@@ -30,7 +29,9 @@ func newPortScanTask(ipPortList []*config.IpPorts) (*config.TargetList, error) {
 			}, nil
 		}
 	}
+	var size int
 	for _, ipPort := range ipPortList {
+		size += len(ipPort.Ports)
 		for _, port := range ipPort.Ports {
 			PortScanTask = append(PortScanTask, &Addr{
 				host: ipPort.IP,
@@ -38,6 +39,8 @@ func newPortScanTask(ipPortList []*config.IpPorts) (*config.TargetList, error) {
 			})
 		}
 	}
+	//proGress := progress.GetNewProgress(size)
+
 	rand.Seed(time.Now().UnixNano())
 	rand.Shuffle(len(PortScanTask), func(i, j int) {
 		PortScanTask[i], PortScanTask[j] = PortScanTask[j], PortScanTask[i]
@@ -54,6 +57,7 @@ func newPortScanTask(ipPortList []*config.IpPorts) (*config.TargetList, error) {
 
 	result := config.NewIpPortProtocolList()
 	for res := range NewPool.Result {
+		//proGress.Add(1)
 		if res == nil {
 			continue
 		}
@@ -72,7 +76,7 @@ func newPortScanTaskRandom(ipPortList []*config.IpPorts) (*config.TargetList, er
 		if !ok {
 			return nil, config.GetErrors().ErrAssertion
 		}
-		protocol, isAlive := protocol_scan.PortScan(p.host, p.port, config.PortScanTimeout)
+		protocol, isAlive := protocol_scan.PortScan(p.host, p.port, config.Get().PortScanTimeout)
 		if !isAlive {
 			return nil, nil
 		} else {

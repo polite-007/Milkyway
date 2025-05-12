@@ -59,6 +59,9 @@ func newDirScanTask(targetList []string, dirList []string) ([]*config.Resps, err
 			continue
 		}
 		resultSimple := res.(*config.Resps)
+		if len(resultSimple.Body) < 25 {
+			continue
+		}
 		var logOut string
 		resultSimple.Cms, resultSimple.Tags = finger.WebFinger(resultSimple)
 		if resultSimple.Cms == "" {
