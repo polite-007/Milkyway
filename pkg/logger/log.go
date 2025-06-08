@@ -5,6 +5,8 @@ import (
 	"io"
 	"log"
 	"math/rand"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -20,7 +22,7 @@ import (
 var (
 	// external variables
 	LogWaitGroup sync.WaitGroup
-	LogName      = fmt.Sprintf("log_%d.txt", generateSixDigitNumber()) // default log.txt
+	LogName      string // default log.txt
 
 	// internal variables
 	logChan = make(chan *string, 1500)
@@ -33,6 +35,16 @@ func generateSixDigitNumber() int {
 }
 
 func init() {
+	// 创建 logs 目录
+	logsDir := "logs"
+	if err := os.MkdirAll(logsDir, 0755); err != nil {
+		fmt.Printf("创建日志目录失败: %v\n", err)
+		return
+	}
+
+	// 设置日志文件名
+	LogName = filepath.Join(logsDir, fmt.Sprintf("log_%d.txt", generateSixDigitNumber()))
+
 	log.SetOutput(io.Discard)
 	go saveLog(LogName)
 }
@@ -56,6 +68,7 @@ func OutLogError(result string) {
 	if result != "" {
 		result = fmt.Sprintf("[%s] %s", color.Red("ERROR"), color.Green(result))
 		LogWaitGroup.Add(1)
+		logChan <- &result
 	}
 }
 
@@ -63,6 +76,7 @@ func OutLogSuccess(result string) {
 	if result != "" {
 		result = fmt.Sprintf("[%s] %s", color.Green("OK"), color.Green(result))
 		LogWaitGroup.Add(1)
+		logChan <- &result
 	}
 }
 

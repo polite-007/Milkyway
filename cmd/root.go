@@ -11,6 +11,7 @@ import (
 	"github.com/polite007/Milkyway/internal/cli"
 	"github.com/polite007/Milkyway/internal/service/task"
 	"github.com/polite007/Milkyway/pkg/logger"
+	"github.com/polite007/Milkyway/utils"
 )
 
 var mainContext context.Context
@@ -87,5 +88,10 @@ func Run() error {
 	logger.OutLog(fmt.Sprintf("[*] Output Log to %s\n", logger.LogName))
 	logger.OutLog(fmt.Sprintf("[*] Over! CostTime: %s\n", time.Since(timeStart).String()))
 	logger.LogWaitGroup.Wait()
+	// 导出html报告
+	if err = utils.GenerateReport(config.Get().Result); err != nil {
+		fmt.Println(err)
+		return err
+	}
 	return nil
 }

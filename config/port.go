@@ -28,6 +28,7 @@ var (
 		445:   "smb",
 		1433:  "mssql",
 		1521:  "oracle",
+		2221:  "ssh",
 		2222:  "ssh",
 		3306:  "mysql",
 		3389:  "rdp",
