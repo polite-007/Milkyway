@@ -17,6 +17,7 @@
   - 支持端口扫描的乱序 (目标越大，速度越快，准确度越高)
 - release默认编译nuclei的8000+漏洞, 支持自定义poc
 - web指纹25000+
+- 优雅的html报告导出
 
 ## 0x02 主要功能
 
@@ -131,6 +132,8 @@
 ![img.png](./static/images/running_picture2.png)
 
 ![img.png](./static/images/running_picture5.png)
+
+![img.png](static/images/img.png)
 
 ![img.png](./static/images/running_picture4.png)
 
