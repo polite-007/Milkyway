@@ -1,7 +1,7 @@
 package config
 
 var (
-	Version = "0.1.5"
+	Version = "0.2.0"
 )
 
 var (
