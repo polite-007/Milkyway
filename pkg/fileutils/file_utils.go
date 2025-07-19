@@ -165,13 +165,13 @@ func ReadFileFromZipStream(content []byte) ([]*FileStruct, error) {
 		if err != nil {
 			return nil, err
 		}
-		defer rc.Close()
 
 		file := &FileStruct{
 			Name: f.Name,
 		}
 		// 读取文件内容
 		data, err := io.ReadAll(rc)
+		rc.Close()
 		if err != nil {
 			return nil, err
 		}
