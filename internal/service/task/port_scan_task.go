@@ -1,24 +1,24 @@
 package task
 
 import (
+	config2 "github.com/polite007/Milkyway/internal/config"
 	"math/rand"
 	"time"
 
-	"github.com/polite007/Milkyway/config"
 	"github.com/polite007/Milkyway/internal/service/protocol/protocol_scan"
 )
 
 // newPortScanTask 返回存活的端口和对应的协议
-func newPortScanTask(ipPortList []*config.IpPorts) (*config.TargetList, error) {
+func newPortScanTask(ipPortList []*config2.IpPorts) (*config2.TargetList, error) {
 	var PortScanTask []*Addr
-	NewPool := NewWorkPool(config.Get().WorkPoolNum)
+	NewPool := NewWorkPool(config2.Get().WorkPoolNum)
 	NewPool.Start()
 	f := func(args any) (any, error) {
 		p, ok := args.(*Addr)
 		if !ok {
-			return nil, config.GetErrors().ErrAssertion
+			return nil, config2.GetErrors().ErrAssertion
 		}
-		protocol, isAlive := protocol_scan.PortScan(p.host, p.port, config.Get().PortScanTimeout)
+		protocol, isAlive := protocol_scan.PortScan(p.host, p.port, config2.Get().PortScanTimeout)
 		if !isAlive {
 			return nil, nil
 		} else {
@@ -55,7 +55,7 @@ func newPortScanTask(ipPortList []*config.IpPorts) (*config.TargetList, error) {
 		close(NewPool.Result)    // 关闭结果队列
 	}()
 
-	result := config.NewIpPortProtocolList()
+	result := config2.NewIpPortProtocolList()
 	for res := range NewPool.Result {
 		//proGress.Add(1)
 		if res == nil {
@@ -67,16 +67,16 @@ func newPortScanTask(ipPortList []*config.IpPorts) (*config.TargetList, error) {
 	return result, nil
 }
 
-func newPortScanTaskRandom(ipPortList []*config.IpPorts) (*config.TargetList, error) {
-	NewPool := NewWorkPool(config.Get().WorkPoolNum)
+func newPortScanTaskRandom(ipPortList []*config2.IpPorts) (*config2.TargetList, error) {
+	NewPool := NewWorkPool(config2.Get().WorkPoolNum)
 	NewPool.Start()
 
 	f := func(args any) (any, error) {
 		p, ok := args.(*Addr)
 		if !ok {
-			return nil, config.GetErrors().ErrAssertion
+			return nil, config2.GetErrors().ErrAssertion
 		}
-		protocol, isAlive := protocol_scan.PortScan(p.host, p.port, config.Get().PortScanTimeout)
+		protocol, isAlive := protocol_scan.PortScan(p.host, p.port, config2.Get().PortScanTimeout)
 		if !isAlive {
 			return nil, nil
 		} else {
@@ -103,7 +103,7 @@ func newPortScanTaskRandom(ipPortList []*config.IpPorts) (*config.TargetList, er
 		close(NewPool.Result)    // 关闭结果队列
 	}()
 
-	result := config.NewIpPortProtocolList()
+	result := config2.NewIpPortProtocolList()
 	for res := range NewPool.Result {
 		if res == nil {
 			continue

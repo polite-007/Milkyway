@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"time"
 
-	"github.com/polite007/Milkyway/internal/pkg/proxy"
+	"github.com/polite007/Milkyway/internal/pkg/network"
 	"github.com/polite007/Milkyway/internal/service/protocol/protocol_scan/lib"
 )
 
@@ -13,7 +13,7 @@ func RdpScan(addr string) (string, error) {
 	var (
 		payload = "0300002a25e00000000000436f6f6b69653a206d737473686173683d6e6d61700d0a0100080003000000"
 	)
-	conn, err := proxy.WrapperTCP("tcp", addr, 5*time.Second)
+	conn, err := network.WrapperTCP("tcp", addr, 5*time.Second)
 	if err == nil {
 		defer conn.Close()
 		requestPayload, _ := hex.DecodeString(payload)

@@ -1,10 +1,9 @@
 package report
 
 import (
+	"github.com/polite007/Milkyway/internal/config"
 	"net/url"
 	"testing"
-
-	"github.com/polite007/Milkyway/config"
 )
 
 func TestGenerateReport(t *testing.T) {

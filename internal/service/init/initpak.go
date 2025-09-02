@@ -3,6 +3,8 @@ package initpak
 import (
 	"errors"
 	"fmt"
+	"github.com/polite007/Milkyway/internal/config"
+	"github.com/polite007/Milkyway/internal/pkg/httpx"
 	"net"
 	"net/http"
 	"net/url"
@@ -10,9 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/pkg/httpx"
-	proxy2 "github.com/polite007/Milkyway/internal/pkg/proxy"
+	proxy2 "github.com/polite007/Milkyway/internal/pkg/network"
 	"github.com/polite007/Milkyway/pkg/fileutils"
 	"github.com/polite007/Milkyway/pkg/neutron/protocols"
 	http2 "github.com/polite007/Milkyway/pkg/neutron/protocols/http"
@@ -24,31 +24,11 @@ import (
 )
 
 var (
-	PocsList        []*templates.Template
-	ExecuterOptions *protocols.ExecuterOptions
+	PocsList       []*templates.Template
+	ExecuteOptions *protocols.ExecuterOptions
 )
 
-// 为httpx库设置代理
-func InitHttpProxy() error {
-	configs := config.Get()
-	if configs.Socks5Proxy != "" {
-		return httpx.WithProxy(configs.Socks5Proxy)
-	}
-	if configs.HttpProxy != "" {
-		return httpx.WithProxy(configs.HttpProxy)
-	}
-	return nil
-}
-
-// 为nuclei poc引擎初始化，扫描漏洞前必须进行的
-func InitPocEngine() error {
-	// fmt.Printf("[*] 初始化poc库\n")
-	if err := initNucleiPocList("poc_all"); err != nil {
-		return err
-	}
-	return initNculeiProxy()
-}
-
+// initNucleiPocList 初始化nuclei poc列表
 func initNucleiPocList(dir string) error {
 	var (
 		configs = config.Get()
@@ -68,9 +48,9 @@ func initNucleiPocList(dir string) error {
 	}
 
 	if configs.PocId != "" {
-		var configsPocids sync.Map
+		var configsPocIDs sync.Map
 		for _, pocId := range strings.Split(configs.PocId, ",") {
-			configsPocids.Store(pocId, true)
+			configsPocIDs.Store(pocId, true)
 		}
 		for _, poc := range pocFile {
 			t := &templates.Template{}
@@ -78,11 +58,11 @@ func initNucleiPocList(dir string) error {
 			if err != nil {
 				continue
 			}
-			err = t.Compile(ExecuterOptions)
+			err = t.Compile(ExecuteOptions)
 			if err != nil {
 				continue
 			}
-			if _, ok := configsPocids.Load(t.Id); ok {
+			if _, ok := configsPocIDs.Load(t.Id); ok {
 				PocsList = append(PocsList, t)
 			}
 		}
@@ -97,7 +77,7 @@ func initNucleiPocList(dir string) error {
 			if err != nil {
 				continue
 			}
-			err = t.Compile(ExecuterOptions)
+			err = t.Compile(ExecuteOptions)
 			if err != nil {
 				continue
 			}
@@ -115,7 +95,7 @@ func initNucleiPocList(dir string) error {
 		if err != nil {
 			continue
 		}
-		err = t.Compile(ExecuterOptions)
+		err = t.Compile(ExecuteOptions)
 		if err != nil {
 			continue
 		}
@@ -126,7 +106,8 @@ func initNucleiPocList(dir string) error {
 	return nil
 }
 
-func initNculeiProxy() error {
+// initNucleiProxy 初始化nuclei代理
+func initNucleiProxy() error {
 	var (
 		configs = config.Get()
 	)
@@ -157,4 +138,24 @@ func initNculeiProxy() error {
 		}
 	}
 	return nil
+}
+
+// InitHttpProxy 为httpx库设置代理
+func InitHttpProxy(socks5Proxy, httpProxy string) error {
+	if socks5Proxy != "" {
+		return httpx.WithProxy(socks5Proxy)
+	}
+	if httpProxy != "" {
+		return httpx.WithProxy(httpProxy)
+	}
+	return nil
+}
+
+// InitPocEngine 为nuclei poc引擎初始化，扫描漏洞前必须进行的
+func InitPocEngine() error {
+	// fmt.Printf("[*] 初始化poc库\n")
+	if err := initNucleiPocList("poc_all"); err != nil {
+		return err
+	}
+	return initNucleiProxy()
 }

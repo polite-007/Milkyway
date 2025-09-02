@@ -4,35 +4,35 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	config2 "github.com/polite007/Milkyway/internal/config"
 	"net"
 	"time"
 
 	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/pkg/proxy"
+	"github.com/polite007/Milkyway/internal/pkg/network"
 	"github.com/polite007/Milkyway/pkg/color"
 	"github.com/polite007/Milkyway/pkg/logger"
 )
 
 func mysqlConn(ip string, port int, user, pass string) error {
 	mysql.RegisterDialContext("socks", func(ctx context.Context, addr string) (net.Conn, error) {
-		return proxy.WrapperTCP("tcp", addr, 5*time.Second)
+		return network.WrapperTCP("tcp", addr, 5*time.Second)
 	})
 
 	Host, Port, Username, Password := ip, port, user, pass
-	dataSourceName := fmt.Sprintf("%v:%v@tcp(%v:%v)/mysql?charset=utf8&timeout=%v", Username, Password, Host, Port, config.Get().PortScanTimeout)
+	dataSourceName := fmt.Sprintf("%v:%v@tcp(%v:%v)/mysql?charset=utf8&timeout=%v", Username, Password, Host, Port, config2.Get().PortScanTimeout)
 	db, err := sql.Open("mysql", dataSourceName)
 	if err == nil {
-		db.SetConnMaxLifetime(config.Get().PortScanTimeout)
-		db.SetConnMaxIdleTime(config.Get().PortScanTimeout)
+		db.SetConnMaxLifetime(config2.Get().PortScanTimeout)
+		db.SetConnMaxIdleTime(config2.Get().PortScanTimeout)
 		db.SetMaxIdleConns(0)
 		defer db.Close()
 		err = db.Ping()
 		if err == nil {
 			result := fmt.Sprintf("[%s] %v:%v %v:%v\n", color.Red("mysql"), Host, Port, color.Red(Username), color.Red(Password))
 			logger.OutLog(result)
-			config.Get().Result.AddProtocolVul(Host, port, "mysql", fmt.Sprintf("%v:%v", Username, Password))
+			config2.Get().Result.AddProtocolVul(Host, port, "mysql", fmt.Sprintf("%v:%v", Username, Password))
 		} else {
 			return err
 		}
@@ -41,8 +41,8 @@ func mysqlConn(ip string, port int, user, pass string) error {
 }
 
 func mysqlScan(ip string, port int) {
-	for _, user := range config.GetDict().UserMysql {
-		for _, pass := range config.GetDict().PasswordMysql {
+	for _, user := range config2.GetDict().UserMysql {
+		for _, pass := range config2.GetDict().PasswordMysql {
 			if err := mysqlConn(ip, port, user, pass); err == nil {
 				return
 			}

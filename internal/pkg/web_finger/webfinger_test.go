@@ -1,4 +1,4 @@
-package finger
+package web_finger
 
 import (
 	"bytes"

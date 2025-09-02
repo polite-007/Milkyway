@@ -2,13 +2,12 @@ package report
 
 import (
 	"fmt"
+	"github.com/polite007/Milkyway/internal/config"
 	"html/template"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
-
-	"github.com/polite007/Milkyway/config"
 )
 
 // GenerateReport 生成HTML格式的扫描报告

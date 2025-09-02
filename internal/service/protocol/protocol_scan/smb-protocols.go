@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/polite007/Milkyway/internal/pkg/proxy"
+	"github.com/polite007/Milkyway/internal/pkg/network"
 	"github.com/polite007/Milkyway/internal/service/protocol/protocol_scan/lib"
 )
 
@@ -30,7 +30,7 @@ func SmbProtocolScan(addr string) (string, error) {
 	}
 	var versionListArray = []string{"2.0.2", "2.1.0", "3.0.0", "3.0.2", "3.1.1"}
 	// Negotiate Protocol Request/判断是否有smb服务以及smb版本
-	conn, err := proxy.WrapperTCP("tcp", addr, 5*time.Second)
+	conn, err := network.WrapperTCP("tcp", addr, 5*time.Second)
 	if err == nil {
 		defer conn.Close()
 		payloadAll, _ := hex.DecodeString(payloadListMap["all"])

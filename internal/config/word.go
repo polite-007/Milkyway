@@ -1,4 +1,4 @@
-package word
+package config
 
 // Vulnerability 漏洞结构体
 type Vulnerability struct {

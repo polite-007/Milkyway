@@ -3,12 +3,12 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/polite007/Milkyway/internal/config"
 	"github.com/polite007/Milkyway/pkg/report"
 	"os"
 	"os/signal"
 	"time"
 
-	"github.com/polite007/Milkyway/config"
 	"github.com/polite007/Milkyway/internal/cli"
 	"github.com/polite007/Milkyway/internal/service/task"
 	"github.com/polite007/Milkyway/pkg/logger"
@@ -47,14 +47,19 @@ func Run() error {
 		timeStart       = time.Now() // 任务开始时间
 		err             error
 	)
+
+	// 解析参数
 	if err = cli.ParseArgs(); err != nil {
 		return err
 	}
-	config.Get().PrintDefaultUsage()
+
+	// 解析目标&获取目标
 	ipList, urlList, DesignatedPorts, err = cli.ParseTarget()
 	if err != nil {
 		return err
 	}
+
+	// 扫描 ip
 	if len(ipList) != 0 {
 		if config.Get().Result.IpActiveList, err = task.IpActiveScan(ipList); err != nil {
 			return err
@@ -66,16 +71,22 @@ func Run() error {
 			return err
 		}
 	}
+
+	// 扫描 url
 	if len(urlList) != 0 {
 		if WebListTemp, err := task.WebScanWithDomain(urlList); err == nil {
 			config.Get().Result.WebList = append(config.Get().Result.WebList, WebListTemp...)
 		}
 	}
+
+	// 目录扫描
 	if !config.Get().NoDirScan {
 		if WebListTemp, err := task.DirScan(config.Get().Result.WebList); err == nil {
 			config.Get().Result.WebList = append(config.Get().Result.WebList, WebListTemp...)
 		}
 	}
+
+	// 漏洞扫描
 	if !config.Get().NoVulScan {
 		if err = task.ProtocolVulScan(config.Get().Result.IpPortList); err != nil {
 			return err
@@ -84,14 +95,12 @@ func Run() error {
 			return err
 		}
 	}
+
 	// 等待所有日志写入
 	logger.OutLog(fmt.Sprintf("[*] Output Log to %s\n", logger.LogName))
 	logger.OutLog(fmt.Sprintf("[*] Over! CostTime: %s\n", time.Since(timeStart).String()))
 	logger.LogWaitGroup.Wait()
+
 	// 导出html报告
-	if err = report.GenerateReport(config.Get().Result); err != nil {
-		fmt.Println(err)
-		return err
-	}
-	return nil
+	return report.GenerateReport(config.Get().Result)
 }

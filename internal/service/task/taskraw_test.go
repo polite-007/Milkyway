@@ -2,10 +2,9 @@ package task
 
 import (
 	"fmt"
+	"github.com/polite007/Milkyway/internal/config"
 	"testing"
 	"time"
-
-	"github.com/polite007/Milkyway/config"
 )
 
 func TestTask(t *testing.T) {

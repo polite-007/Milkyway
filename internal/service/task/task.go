@@ -2,12 +2,12 @@ package task
 
 import (
 	"fmt"
+	config2 "github.com/polite007/Milkyway/internal/config"
 	"github.com/polite007/Milkyway/pkg/fileutils"
 	"github.com/polite007/Milkyway/static"
 	"strings"
 
-	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/service/initpak"
+	"github.com/polite007/Milkyway/internal/service/init"
 	"github.com/polite007/Milkyway/pkg/color"
 	"github.com/polite007/Milkyway/pkg/logger"
 	"github.com/polite007/Milkyway/pkg/strutils"
@@ -23,7 +23,7 @@ import (
 func IpActiveScan(ips []string) ([]string, error) {
 	logger.OutLog("---------------IpActiveScan-----------------\n")
 	var err error
-	configs := config.Get()
+	configs := config2.Get()
 	ipAliveList := ips
 	if configs.CheckProxy() {
 		logger.OutLog(fmt.Sprintf("代理模式暂不支持ICMP探测,直接进行端口扫描\n"))
@@ -48,11 +48,11 @@ func IpActiveScan(ips []string) ([]string, error) {
 //   - []*common.IpPortProtocol: 扫描到的活跃IP、端口和协议信息列表。
 //   - error: 如果扫描过程中发生错误，则返回错误信息；否则返回nil。
 
-func PortActiveScan(ips []string, port []int, DesignatedPorts map[string][]int) ([]*config.IpPortProtocol, error) {
+func PortActiveScan(ips []string, port []int, DesignatedPorts map[string][]int) ([]*config2.IpPortProtocol, error) {
 	logger.OutLog("---------------PortActiveScan---------------\n")
 	var (
-		portScanTaskList []*config.IpPorts
-		aliveIpPortList  *config.TargetList
+		portScanTaskList []*config2.IpPorts
+		aliveIpPortList  *config2.TargetList
 		err              error
 	)
 	for _, ip := range ips {
@@ -62,12 +62,12 @@ func PortActiveScan(ips []string, port []int, DesignatedPorts map[string][]int) 
 				targetPort = targetPortTemp
 			}
 		}
-		portScanTaskList = append(portScanTaskList, &config.IpPorts{
+		portScanTaskList = append(portScanTaskList, &config2.IpPorts{
 			IP:    ip,
 			Ports: targetPort,
 		})
 	}
-	if config.Get().ScanRandom {
+	if config2.Get().ScanRandom {
 		aliveIpPortList, err = newPortScanTask(portScanTaskList)
 	} else {
 		aliveIpPortList, err = newPortScanTaskRandom(portScanTaskList)
@@ -84,32 +84,32 @@ func PortActiveScan(ips []string, port []int, DesignatedPorts map[string][]int) 
 }
 
 // WebActiveScan 扫描非web协议的目标,
-func WebActiveScan(ipPortList []*config.IpPortProtocol) ([]*config.IpPortProtocol, []*config.Resps, error) {
+func WebActiveScan(ipPortList []*config2.IpPortProtocol) ([]*config2.IpPortProtocol, []*config2.Resps, error) {
 	logger.OutLog("---------------WebActiveScan----------------\n")
 	return newWebScanTask(ipPortList)
 }
 
 // WebScanWithDomain 根据url探测
-func WebScanWithDomain(targetUrl []string) ([]*config.Resps, error) {
+func WebScanWithDomain(targetUrl []string) ([]*config2.Resps, error) {
 	logger.OutLog("---------------WebScanWithDomain------------\n")
 	return newWebScanWithDomainTask(targetUrl)
 }
 
 // ProtocolVulScan 协议漏洞扫描
-func ProtocolVulScan(ipPortList []*config.IpPortProtocol) error {
+func ProtocolVulScan(ipPortList []*config2.IpPortProtocol) error {
 	logger.OutLog("---------------ProtocolVulScan--------------\n")
 	return newProtocolVulScan(ipPortList)
 }
 
 // WebPocVulScan 网站漏洞扫描
-func WebPocVulScan(WebList []*config.Resps) error {
+func WebPocVulScan(WebList []*config2.Resps) error {
 	logger.OutLog("---------------WebPocVulScan----------------\n")
 	// 初始化poc引擎
 	if err := initpak.InitPocEngine(); err != nil {
 		return err
 	}
 	// 打印配置
-	if !config.Get().FingerMatch {
+	if !config2.Get().FingerMatch {
 		fmt.Printf("[*] %s\n", color.Yellow("当前扫描模式是匹配指纹,如需全量扫描请更改-m,但全量扫描会有误报,请自己判断"))
 	} else {
 		fmt.Printf("[*] %s\n", color.Yellow("当前扫描模式是全量扫描,如需进行指纹匹配请更改去掉-m"))
@@ -122,7 +122,7 @@ func WebPocVulScan(WebList []*config.Resps) error {
 			if web.StatusCode == 404 {
 				continue
 			}
-			if !config.Get().FingerMatch {
+			if !config2.Get().FingerMatch {
 				if len(web.Tags) != 0 {
 					if strutils.HasCommonElement(web.Tags, strings.Split(poc.Info.Tags, ",")) {
 						pocTask = append(pocTask, &PocTask{
@@ -153,7 +153,7 @@ func WebPocVulScan(WebList []*config.Resps) error {
 	return newWebPocVulScan(pocTask)
 }
 
-func DirScan(targetListRaw []*config.Resps) ([]*config.Resps, error) {
+func DirScan(targetListRaw []*config2.Resps) ([]*config2.Resps, error) {
 	logger.OutLog("---------------DirScan----------------------\n")
 	var (
 		targetList  []string
@@ -166,8 +166,8 @@ func DirScan(targetListRaw []*config.Resps) ([]*config.Resps, error) {
 	} else {
 		dirList = strings.Split(string(dirListByte), "\n")
 	}
-	if config.Get().DirDictFile != "" {
-		dirList, err = fileutils.ReadLines(config.Get().DirDictFile)
+	if config2.Get().DirDictFile != "" {
+		dirList, err = fileutils.ReadLines(config2.Get().DirDictFile)
 		if err != nil {
 			return nil, err
 		}

@@ -3,13 +3,13 @@ package httpx
 import (
 	"crypto/tls"
 	"fmt"
+	config2 "github.com/polite007/Milkyway/internal/config"
 	"io"
 	"net"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/polite007/Milkyway/config"
 	"golang.org/x/net/html"
 )
 
@@ -24,17 +24,17 @@ var (
 
 var client = &http.Client{
 	Transport: defaultTransport,
-	Timeout:   config.Get().WebScanTimeout,
+	Timeout:   config2.Get().WebScanTimeout,
 }
 
 var defaultTransport = &http.Transport{
 	DialContext:         dialer.DialContext,
-	MaxConnsPerHost:     config.Get().WorkPoolNum,
-	MaxIdleConns:        config.Get().WorkPoolNum,
-	MaxIdleConnsPerHost: config.Get().WorkPoolNum,
+	MaxConnsPerHost:     config2.Get().WorkPoolNum,
+	MaxIdleConns:        config2.Get().WorkPoolNum,
+	MaxIdleConnsPerHost: config2.Get().WorkPoolNum,
 	IdleConnTimeout:     keepAlive,
 	TLSClientConfig:     &tls.Config{MinVersion: tls.VersionTLS10, InsecureSkipVerify: true},
-	TLSHandshakeTimeout: config.Get().TLSHandshakeTimeout,
+	TLSHandshakeTimeout: config2.Get().TLSHandshakeTimeout,
 	DisableKeepAlives:   false,
 }
 
@@ -86,7 +86,7 @@ func Put(host string, header map[string]string, path string, body string) (*http
 	return resp, nil
 }
 
-func HandleResponse(resp *http.Response) (*config.Resps, error) {
+func HandleResponse(resp *http.Response) (*config2.Resps, error) {
 	defer resp.Body.Close()
 	// 读取响应体
 	body, err := io.ReadAll(resp.Body)
@@ -96,10 +96,10 @@ func HandleResponse(resp *http.Response) (*config.Resps, error) {
 
 	//将响应体转换为UTF-8编码
 	contentType := strings.ToLower(resp.Header.Get("Content-Type"))
-	httpbody := toUtf8(string(body), contentType)
+	httpBody := toUtf8(string(body), contentType)
 
 	//拿取标题
-	doc, err := html.Parse(strings.NewReader(httpbody))
+	doc, err := html.Parse(strings.NewReader(httpBody))
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing HTML: %v\n", err)
 	}
@@ -123,17 +123,17 @@ func HandleResponse(resp *http.Response) (*config.Resps, error) {
 	}
 
 	// 获取favicon哈希值
-	favhash := getfavicon(httpbody, resp.Request.URL.String())
+	favHash := getfavicon(httpBody, resp.Request.URL.String())
 
 	// 返回结果
-	return &config.Resps{
+	return &config2.Resps{
 		Url:        resp.Request.URL,
 		Title:      title,
-		Body:       httpbody,
+		Body:       httpBody,
 		Header:     resp.Header,
 		Server:     server,
 		StatusCode: resp.StatusCode,
-		FavHash:    favhash,
+		FavHash:    favHash,
 	}, nil
 }
 

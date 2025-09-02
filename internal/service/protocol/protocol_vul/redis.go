@@ -2,13 +2,13 @@ package protocol_vul
 
 import (
 	"fmt"
+	config2 "github.com/polite007/Milkyway/internal/config"
 	"io"
 	"net"
 	"strings"
 	"time"
 
-	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/pkg/proxy"
+	"github.com/polite007/Milkyway/internal/pkg/network"
 	"github.com/polite007/Milkyway/pkg/color"
 	"github.com/polite007/Milkyway/pkg/logger"
 )
@@ -61,12 +61,12 @@ func getconfig(conn net.Conn) (dbfilename string, dir string, err error) {
 
 func redisConn(ip string, port int, pass string) error {
 	realhost := fmt.Sprintf("%s:%v", ip, port)
-	conn, err := proxy.WrapperTCP("tcp", realhost, config.Get().PortScanTimeout)
+	conn, err := network.WrapperTCP("tcp", realhost, config2.Get().PortScanTimeout)
 	if err != nil {
 		return err
 	}
 	defer conn.Close()
-	err = conn.SetReadDeadline(time.Now().Add(config.Get().PortScanTimeout))
+	err = conn.SetReadDeadline(time.Now().Add(config2.Get().PortScanTimeout))
 	if err != nil {
 		return err
 	}
@@ -94,12 +94,12 @@ func redisConn(ip string, port int, pass string) error {
 
 func redisUnauth(ip string, port int) error {
 	realHost := fmt.Sprintf("%s:%v", ip, port)
-	conn, err := proxy.WrapperTCP("tcp", realHost, config.Get().PortScanTimeout)
+	conn, err := network.WrapperTCP("tcp", realHost, config2.Get().PortScanTimeout)
 	if err != nil {
 		return err
 	}
 	defer conn.Close()
-	err = conn.SetReadDeadline(time.Now().Add(config.Get().PortScanTimeout))
+	err = conn.SetReadDeadline(time.Now().Add(config2.Get().PortScanTimeout))
 	if err != nil {
 		return err
 	}
@@ -116,11 +116,11 @@ func redisUnauth(ip string, port int) error {
 		if err != nil {
 			result := fmt.Sprintf("[%s] %s:%v %s\n", color.Red("redis"), ip, port, color.Red("unauthorized"))
 			logger.OutLog(result)
-			config.Get().Result.AddProtocolVul(ip, port, "redis", "unauthorized")
+			config2.Get().Result.AddProtocolVul(ip, port, "redis", "unauthorized")
 		} else {
 			result := fmt.Sprintf("[%s] %s:%v %s:%s\n", color.Red("redis"), ip, port, color.Red("unauthorized file"), color.Red(dir+"/"+dbfilename))
 			logger.OutLog(result)
-			config.Get().Result.AddProtocolVul(ip, port, "redis", fmt.Sprintf("%s", "unauthorized file: "+dir+"/"+dbfilename))
+			config2.Get().Result.AddProtocolVul(ip, port, "redis", fmt.Sprintf("%s", "unauthorized file: "+dir+"/"+dbfilename))
 		}
 		return nil
 	} else {
@@ -133,7 +133,7 @@ func redisScan(ip string, port int) {
 	if err == nil {
 		return
 	}
-	for _, pass := range config.GetDict().PasswordRedis {
+	for _, pass := range config2.GetDict().PasswordRedis {
 		if err = redisConn(ip, port, pass); err == nil {
 			return
 		}

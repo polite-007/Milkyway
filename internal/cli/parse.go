@@ -1,8 +1,8 @@
 package cli
 
 import (
-	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/service/initpak"
+	"github.com/polite007/Milkyway/internal/config"
+	"github.com/polite007/Milkyway/internal/service/init"
 	"github.com/projectdiscovery/goflags"
 	"os"
 )
@@ -57,6 +57,7 @@ func ParseArgs() error {
 	if err = flagSet.Parse(); err != nil {
 		return err
 	}
+
 	// 配置端口变量
 	switch options.Port {
 	case "all":
@@ -70,13 +71,17 @@ func ParseArgs() error {
 	case "default":
 		options.Port = config.GetPorts().PortDefault
 	}
+
 	// 初始化httpx代理
-	if err = initpak.InitHttpProxy(); err != nil {
+	if err = initpak.InitHttpProxy(config.Get().Socks5Proxy, config.Get().HttpProxy); err != nil {
 		return err
 	}
+
 	// 如果fofa key, 取系统变量 FOFA_KEY
 	if options.FofaKey == "" {
 		options.FofaKey = os.Getenv("FOFA_KEY")
 	}
+
+	config.Get().PrintDefaultUsage()
 	return nil
 }

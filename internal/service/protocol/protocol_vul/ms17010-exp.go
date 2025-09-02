@@ -5,13 +5,13 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"github.com/polite007/Milkyway/internal/config"
 	"io"
 	"net"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/polite007/Milkyway/config"
 	"github.com/polite007/Milkyway/pkg/logger"
 )
 

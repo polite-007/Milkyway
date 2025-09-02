@@ -1,22 +1,22 @@
 package task
 
 import (
-	"github.com/polite007/Milkyway/config"
+	config2 "github.com/polite007/Milkyway/internal/config"
 	"github.com/polite007/Milkyway/internal/service/protocol/protocol_scan"
 )
 
 // IPScanTask 返回存活的ip列表
 func newIPScanTask(ipList []string) ([]string, error) {
 	// 自定义消费者的内部函数
-	NewPool := NewWorkPool(config.Get().WorkPoolNum)
+	NewPool := NewWorkPool(config2.Get().WorkPoolNum)
 	NewPool.Start()
 
 	f := func(args any) (any, error) {
 		ip, ok := args.(string)
 		if !ok {
-			return nil, config.GetErrors().ErrAssertion
+			return nil, config2.GetErrors().ErrAssertion
 		}
-		isAlive := protocol_scan.ICMPCheck(ip, config.Get().ICMPTimeOut)
+		isAlive := protocol_scan.ICMPCheck(ip, config2.Get().ICMPTimeOut)
 		if !isAlive {
 			return "", nil
 		} else {

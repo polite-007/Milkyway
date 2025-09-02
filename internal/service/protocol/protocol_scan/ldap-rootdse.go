@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/polite007/Milkyway/internal/pkg/proxy"
+	"github.com/polite007/Milkyway/internal/pkg/network"
 	"github.com/polite007/Milkyway/internal/service/protocol/protocol_scan/lib"
 	"github.com/polite007/Milkyway/pkg/strutils"
 )
@@ -119,7 +119,7 @@ func LdapRootDseScan(addr string) (string, error) {
 	var result string
 
 	// 尝试TCP连接
-	conn, err := proxy.WrapperTCP("tcp", addr, 5*time.Second)
+	conn, err := network.WrapperTCP("tcp", addr, 5*time.Second)
 	if err != nil {
 		return "", err
 	}

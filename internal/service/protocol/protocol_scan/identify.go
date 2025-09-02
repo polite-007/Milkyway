@@ -2,12 +2,12 @@ package protocol_scan
 
 import (
 	"fmt"
+	config2 "github.com/polite007/Milkyway/internal/config"
 	"net"
 	"strings"
 	"time"
 
-	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/pkg/proxy"
+	"github.com/polite007/Milkyway/internal/pkg/network"
 	"github.com/polite007/Milkyway/pkg/color"
 	"github.com/polite007/Milkyway/pkg/logger"
 )
@@ -21,12 +21,12 @@ func PortScan(host string, port int, timeout time.Duration) (string, bool) {
 		result   string
 		protocol string
 	)
-	conn, err = proxy.WrapperTCP("tcp4", fmt.Sprintf("%s:%v", host, port), timeout)
+	conn, err = network.WrapperTCP("tcp4", fmt.Sprintf("%s:%v", host, port), timeout)
 	if err == nil {
 		defer conn.Close()
 		protocol, result, err = protocolScan(host, port)
 		if err == nil && result != "" {
-			if config.Get().Verbose {
+			if config2.Get().Verbose {
 				logOut := fmt.Sprintf("[*] [%s] %s:%d \n%s\n", color.Green(protocol), host, port, color.Green(strings.TrimSpace(result)))
 				logger.OutLog(logOut)
 			} else {
@@ -45,7 +45,7 @@ func PortScan(host string, port int, timeout time.Duration) (string, bool) {
 }
 
 func protocolScan(host string, port int) (string, string, error) {
-	if config.Get().FullScan {
+	if config2.Get().FullScan {
 		// ssh
 		if result, err := SshScan(makeAddr(host, port)); err == nil {
 			return "ssh", result, nil
@@ -83,14 +83,14 @@ func protocolScan(host string, port int) (string, string, error) {
 			return "ftp", result, nil
 		}
 		// null
-		return "", "", config.GetErrors().ErrPortocolScanFailed
+		return "", "", config2.GetErrors().ErrPortocolScanFailed
 	} else {
 		var (
 			protocol string
 			ok       bool
 		)
-		if protocol, ok = config.GetPorts().PortGroupMapNew[port]; !ok {
-			return "", "", config.GetErrors().ErrPortNotProtocol
+		if protocol, ok = config2.GetPorts().PortGroupMapNew[port]; !ok {
+			return "", "", config2.GetErrors().ErrPortNotProtocol
 		}
 		switch protocol {
 		case "rdp":
@@ -151,7 +151,7 @@ func protocolScan(host string, port int) (string, string, error) {
 				return "", "", err
 			}
 		}
-		return "", "", config.GetErrors().ErrPortNotProtocol
+		return "", "", config2.GetErrors().ErrPortNotProtocol
 	}
 }
 

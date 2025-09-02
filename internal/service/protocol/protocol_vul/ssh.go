@@ -2,10 +2,10 @@ package protocol_vul
 
 import (
 	"fmt"
+	config2 "github.com/polite007/Milkyway/internal/config"
 	"net"
 	"strings"
 
-	"github.com/polite007/Milkyway/config"
 	"github.com/polite007/Milkyway/pkg/color"
 	"github.com/polite007/Milkyway/pkg/logger"
 	"golang.org/x/crypto/ssh"
@@ -14,7 +14,7 @@ import (
 func sshConn(ip string, port int, user string, pass string) error {
 	Host, Port, Username, Password := ip, port, user, pass
 	var Auth []ssh.AuthMethod
-	if config.Get().SshKey != "" {
+	if config2.Get().SshKey != "" {
 	} else {
 		Auth = []ssh.AuthMethod{ssh.Password(Password)}
 	}
@@ -22,7 +22,7 @@ func sshConn(ip string, port int, user string, pass string) error {
 	configs := &ssh.ClientConfig{
 		User:    Username,
 		Auth:    Auth,
-		Timeout: config.Get().PortScanTimeout,
+		Timeout: config2.Get().PortScanTimeout,
 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 			return nil
 		},
@@ -37,7 +37,7 @@ func sshConn(ip string, port int, user string, pass string) error {
 			var result string
 			result = fmt.Sprintf("[%s] %v:%v %s:%s\n", color.Red("ssh"), Host, Port, color.Red(Username), color.Red(Password))
 			logger.OutLog(result)
-			config.Get().Result.AddProtocolVul(ip, port, "ssh", fmt.Sprintf("%v:%v", Username, Password))
+			config2.Get().Result.AddProtocolVul(ip, port, "ssh", fmt.Sprintf("%v:%v", Username, Password))
 		}
 		return nil
 	} else {
@@ -46,8 +46,8 @@ func sshConn(ip string, port int, user string, pass string) error {
 }
 
 func sshScan(ip string, port int) {
-	for _, user := range config.GetDict().UserSsh {
-		for _, pass := range config.GetDict().PasswordSsh {
+	for _, user := range config2.GetDict().UserSsh {
+		for _, pass := range config2.GetDict().PasswordSsh {
 			pass = strings.Replace(pass, "{user}", user, -1)
 			err := sshConn(ip, port, user, pass)
 			if err == nil {

@@ -2,24 +2,24 @@ package task
 
 import (
 	"fmt"
+	config2 "github.com/polite007/Milkyway/internal/config"
 
-	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/pkg/finger"
 	"github.com/polite007/Milkyway/internal/pkg/httpx"
+	"github.com/polite007/Milkyway/internal/pkg/web_finger"
 	"github.com/polite007/Milkyway/pkg/color"
 	"github.com/polite007/Milkyway/pkg/logger"
 	"github.com/polite007/Milkyway/pkg/strutils"
 )
 
 // newWebScanTask
-func newWebScanTask(targetList []*config.IpPortProtocol) ([]*config.IpPortProtocol, []*config.Resps, error) {
-	NewPool := NewWorkPool(config.Get().WorkPoolNum)
+func newWebScanTask(targetList []*config2.IpPortProtocol) ([]*config2.IpPortProtocol, []*config2.Resps, error) {
+	NewPool := NewWorkPool(config2.Get().WorkPoolNum)
 	NewPool.Start()
 
 	f := func(args any) (any, error) {
 		p, ok := args.(*Addr)
 		if !ok {
-			return nil, config.GetErrors().ErrAssertion
+			return nil, config2.GetErrors().ErrAssertion
 		}
 		isAlive, err := httpx.Get(fmt.Sprintf("http://%s:%d", p.host, p.port), nil, "/")
 		if err == nil && isAlive.StatusCode != 400 {
@@ -31,17 +31,17 @@ func newWebScanTask(targetList []*config.IpPortProtocol) ([]*config.IpPortProtoc
 			return httpx.HandleResponse(isAlive)
 		}
 
-		return nil, config.GetErrors().ErrTaskFailed
+		return nil, config2.GetErrors().ErrTaskFailed
 	}
 
-	var ipPortListNotWeb []*config.IpPortProtocol
-	var ipPortList []*config.IpPortProtocol
-	var result []*config.Resps
+	var ipPortListNotWeb []*config2.IpPortProtocol
+	var ipPortList []*config2.IpPortProtocol
+	var result []*config2.Resps
 
 	go func() {
 		for _, ipPortProtocol := range targetList {
 			if ipPortProtocol.Protocol != "" {
-				ipPortListNotWeb = append(ipPortListNotWeb, &config.IpPortProtocol{
+				ipPortListNotWeb = append(ipPortListNotWeb, &config2.IpPortProtocol{
 					IP:       ipPortProtocol.IP,
 					Port:     ipPortProtocol.Port,
 					Protocol: ipPortProtocol.Protocol,
@@ -63,14 +63,14 @@ func newWebScanTask(targetList []*config.IpPortProtocol) ([]*config.IpPortProtoc
 		if res == nil {
 			continue
 		}
-		resultSimple := res.(*config.Resps)
+		resultSimple := res.(*config2.Resps)
 		ip, port := strutils.SplitHost(resultSimple.Url.Host)
-		ipPortList = append(ipPortList, &config.IpPortProtocol{
+		ipPortList = append(ipPortList, &config2.IpPortProtocol{
 			IP:       ip,
 			Port:     port,
 			Protocol: "http",
 		})
-		resultSimple.Cms, resultSimple.Tags = finger.WebFinger(resultSimple)
+		resultSimple.Cms, resultSimple.Tags = web_finger.WebFinger(resultSimple)
 		var logOut string
 		if resultSimple.Cms == "" {
 			logOut = fmt.Sprintf("[%s] %-25v len:%d title:%s header: %s",
