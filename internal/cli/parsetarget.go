@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/utils/fofa"
+	"github.com/polite007/Milkyway/internal/pkg/fofa"
 	"github.com/polite007/Milkyway/pkg/fileutils"
 	"github.com/polite007/Milkyway/pkg/strutils"
 	"strings"

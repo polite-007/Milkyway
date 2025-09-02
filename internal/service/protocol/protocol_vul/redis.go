@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/utils/proxy"
+	"github.com/polite007/Milkyway/internal/pkg/proxy"
 	"github.com/polite007/Milkyway/pkg/color"
 	"github.com/polite007/Milkyway/pkg/logger"
 )

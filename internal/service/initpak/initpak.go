@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/utils/httpx"
-	proxy2 "github.com/polite007/Milkyway/internal/utils/proxy"
+	"github.com/polite007/Milkyway/internal/pkg/httpx"
+	proxy2 "github.com/polite007/Milkyway/internal/pkg/proxy"
 	"github.com/polite007/Milkyway/pkg/fileutils"
 	"github.com/polite007/Milkyway/pkg/neutron/protocols"
 	http2 "github.com/polite007/Milkyway/pkg/neutron/protocols/http"

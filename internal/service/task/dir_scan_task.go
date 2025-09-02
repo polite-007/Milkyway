@@ -3,8 +3,8 @@ package task
 import (
 	"fmt"
 	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/utils/finger"
-	"github.com/polite007/Milkyway/internal/utils/httpx"
+	"github.com/polite007/Milkyway/internal/pkg/finger"
+	"github.com/polite007/Milkyway/internal/pkg/httpx"
 	"github.com/polite007/Milkyway/pkg/color"
 	"github.com/polite007/Milkyway/pkg/logger"
 	"strings"

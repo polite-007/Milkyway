@@ -2,7 +2,7 @@ package task
 
 import (
 	"github.com/polite007/Milkyway/config"
-	"github.com/polite007/Milkyway/internal/service/protocol_scan_vul/protocol_vul"
+	"github.com/polite007/Milkyway/internal/service/protocol/protocol_vul"
 )
 
 // newProtocolVulScan 对ip+port+protocol进行对应的协议漏洞扫描

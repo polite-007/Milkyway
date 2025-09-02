@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/url"
 
-	proxy2 "github.com/polite007/Milkyway/internal/utils/proxy"
+	proxy2 "github.com/polite007/Milkyway/internal/pkg/proxy"
 	"golang.org/x/net/proxy"
 )
 
