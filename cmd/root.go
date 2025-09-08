@@ -3,11 +3,12 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/polite007/Milkyway/internal/config"
-	"github.com/polite007/Milkyway/pkg/report"
 	"os"
 	"os/signal"
 	"time"
+
+	"github.com/polite007/Milkyway/internal/config"
+	"github.com/polite007/Milkyway/pkg/report"
 
 	"github.com/polite007/Milkyway/internal/cli"
 	"github.com/polite007/Milkyway/internal/service/task"
@@ -35,7 +36,7 @@ func Execute() {
 		}
 	}()
 	if err := Run(); err != nil {
-		panic(err)
+		fmt.Println("\n" + err.Error())
 	}
 }
 
@@ -97,6 +98,7 @@ func Run() error {
 	}
 
 	// 等待所有日志写入
+	logger.OutLog("---------------Logger&Report----------------\n")
 	logger.OutLog(fmt.Sprintf("[*] Output Log to %s\n", logger.LogName))
 	logger.OutLog(fmt.Sprintf("[*] Over! CostTime: %s\n", time.Since(timeStart).String()))
 	logger.LogWaitGroup.Wait()

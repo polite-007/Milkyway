@@ -2,12 +2,13 @@ package report
 
 import (
 	"fmt"
-	"github.com/polite007/Milkyway/internal/config"
 	"html/template"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/polite007/Milkyway/internal/config"
 )
 
 // GenerateReport 生成HTML格式的扫描报告
@@ -1092,7 +1093,6 @@ func GenerateReport(result *config.AssetsResult) error {
 					ipData.Type = "Web"
 					// 构建完整的 URL
 					webURL := fmt.Sprintf("%s://%s:%d", ipPort.Protocol, ip, ipPort.Port)
-					fmt.Printf("Debug - Building WebURL: %s\n", webURL)
 					ipData.WebURL = webURL
 				}
 			}
@@ -1207,6 +1207,6 @@ func GenerateReport(result *config.AssetsResult) error {
 
 	// 转换为文件URL格式
 	fileURL := strings.ReplaceAll(absPath, "\\", "/")
-	fmt.Printf("报告已生成: %s\n请复制以下地址到浏览器访问：\n%s\n", absPath, fileURL)
+	fmt.Printf("报告已生成, 请复制以下地址到浏览器访问: %s\n", fileURL)
 	return nil
 }

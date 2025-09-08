@@ -2,6 +2,7 @@ package task
 
 import (
 	"fmt"
+
 	config2 "github.com/polite007/Milkyway/internal/config"
 
 	"github.com/polite007/Milkyway/internal/pkg/httpx"
@@ -73,7 +74,7 @@ func newWebScanTask(targetList []*config2.IpPortProtocol) ([]*config2.IpPortProt
 		resultSimple.Cms, resultSimple.Tags = web_finger.WebFinger(resultSimple)
 		var logOut string
 		if resultSimple.Cms == "" {
-			logOut = fmt.Sprintf("[%s] %-25v len:%d title:%s header: %s",
+			logOut = fmt.Sprintf("[%s] %-25v body_len:%d title:%s header: %s",
 				color.Green(resultSimple.StatusCode),
 				resultSimple.Url,
 				len(resultSimple.Body),
@@ -81,7 +82,7 @@ func newWebScanTask(targetList []*config2.IpPortProtocol) ([]*config2.IpPortProt
 				color.Green(resultSimple.Server),
 			)
 		} else {
-			logOut = fmt.Sprintf("[%s] %-25v len:%d title:%s header: %s cms: %s",
+			logOut = fmt.Sprintf("[%s] %-25v body_len:%d title:%s header: %s cms: %s",
 				color.Green(resultSimple.StatusCode),
 				resultSimple.Url,
 				len(resultSimple.Body),

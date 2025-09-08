@@ -73,19 +73,19 @@ func (c *Options) CheckProxy() bool {
 // PrintDefaultUsage 打印默认配置信息
 func (c *Options) PrintDefaultUsage() {
 	fmt.Println(Logo)
-	fmt.Println("---------------Scan Config------------------")
-	fmt.Printf("threads: %d\n", c.WorkPoolNum)
-	fmt.Printf("no-ping: %t\n", c.NoPing)
-	fmt.Printf("no_vulscan: %t\n", c.NoVulScan)
-	fmt.Printf("no_dirscan: %t\n", c.NoDirScan)
+	fmt.Println("\n---------------Scan Config------------------")
+	fmt.Printf("threads:     %d\n", c.WorkPoolNum)
+	fmt.Printf("no-ping:     %t\n", c.NoPing)
+	fmt.Printf("no_vulscan:  %t\n", c.NoVulScan)
+	fmt.Printf("no_dirscan:  %t\n", c.NoDirScan)
 	if c.Socks5Proxy == "" && c.HttpProxy == "" {
-		fmt.Printf("proxy addr: %s\n", "Null")
+		fmt.Printf("proxy addr:  %s\n", "Null")
 	}
 	if c.HttpProxy != "" {
-		fmt.Printf("proxy addr: %s\n", c.HttpProxy)
+		fmt.Printf("proxy addr:  %s\n", c.HttpProxy)
 	}
 	if c.Socks5Proxy != "" {
-		fmt.Printf("proxy addr: %s\n", c.Socks5Proxy)
+		fmt.Printf("proxy addr:  %s\n", c.Socks5Proxy)
 	}
 	fmt.Printf("scan-random: %t\n", c.ScanRandom)
 }
