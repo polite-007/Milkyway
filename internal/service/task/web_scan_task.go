@@ -26,8 +26,8 @@ func newWebScanTask(targetList []*config.WebScanTaskPayload) ([]*config.WebScanT
 		isAlive, err := httpx.Get(fmt.Sprintf("http://%s:%d", p.host, p.port), nil, "/")
 		if err == nil && isAlive.StatusCode != 400 {
 			resp, err := httpx.HandleResponse(isAlive)
-			if err == nil {
-				return resp, nil
+			if err != nil {
+				return nil, config.GetErrors().ErrTaskFailed
 			}
 			return &config.WebScanTaskResult{
 				PortProtocol: config.PortProtocol{
@@ -43,8 +43,8 @@ func newWebScanTask(targetList []*config.WebScanTaskPayload) ([]*config.WebScanT
 		isAlive, err = httpx.Get(fmt.Sprintf("https://%s:%d", p.host, p.port), nil, "/")
 		if err == nil && isAlive.StatusCode != 400 {
 			resp, err := httpx.HandleResponse(isAlive)
-			if err == nil {
-				return resp, nil
+			if err != nil {
+				return nil, config.GetErrors().ErrTaskFailed
 			}
 			return &config.WebScanTaskResult{
 				PortProtocol: config.PortProtocol{

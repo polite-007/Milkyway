@@ -147,7 +147,7 @@ func WebPocVulScan(WebList []*config.WebPocVulScanPayload) error {
 				pocTask = append(pocTask, &config.WebPocVulScanPayload{
 					IP:        webTemp.IP,
 					Port:      webTemp.Port,
-					Url:       web.Url.String(),
+					Url:       webTemp.Url,
 					Poc:       poc,
 					TargetUrl: web.Url.String(),
 				})

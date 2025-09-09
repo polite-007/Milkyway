@@ -21,9 +21,9 @@ func newWebPocVulScan(pocTask []*config.WebPocVulScanPayload) error {
 		res, _ := p.Poc.Execute(p.TargetUrl, nil)
 		if res != nil {
 			if res.Matched || res.Extracted {
-				result := fmt.Sprintf("[*] %s %s level: %s id: %s\n", p.TargetUrl, color.Red(p.Poc.Info.Name), p.Poc.Info.Severity, p.Poc.Id)
-				logger.OutLog(result)
+				result := fmt.Sprintf("[*] %s %s level:%s id: %s\n", p.TargetUrl, color.Red(p.Poc.Info.Name), p.Poc.Info.Severity, p.Poc.Id)
 				config.GetAssetsResult().AddWebPocVul(p)
+				logger.OutLog(result)
 			}
 		}
 		return nil, config.GetErrors().ErrTaskFailed
