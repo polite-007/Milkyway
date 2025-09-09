@@ -74,18 +74,19 @@ func (c *Options) CheckProxy() bool {
 func (c *Options) PrintDefaultUsage() {
 	fmt.Println(Logo)
 	fmt.Println("\n---------------Scan Config------------------")
-	fmt.Printf("threads:     %d\n", c.WorkPoolNum)
-	fmt.Printf("no-ping:     %t\n", c.NoPing)
-	fmt.Printf("no_vulscan:  %t\n", c.NoVulScan)
-	fmt.Printf("no_dirscan:  %t\n", c.NoDirScan)
+	fmt.Printf("threads:          %d\n", c.WorkPoolNum)
+	fmt.Printf("no-ping:          %t\n", c.NoPing)
+	fmt.Printf("no_vulscan:       %t\n", c.NoVulScan)
+	fmt.Printf("no_dirscan:       %t\n", c.NoDirScan)
 	if c.Socks5Proxy == "" && c.HttpProxy == "" {
-		fmt.Printf("proxy addr:  %s\n", "Null")
+		fmt.Printf("proxy addr:       %s\n", "Null")
 	}
 	if c.HttpProxy != "" {
-		fmt.Printf("proxy addr:  %s\n", c.HttpProxy)
+		fmt.Printf("proxy addr:       %s\n", c.HttpProxy)
 	}
 	if c.Socks5Proxy != "" {
-		fmt.Printf("proxy addr:  %s\n", c.Socks5Proxy)
+		fmt.Printf("proxy addr:       %s\n", c.Socks5Proxy)
 	}
-	fmt.Printf("scan-random: %t\n", c.ScanRandom)
+	fmt.Printf("scan_random:      %t\n", c.ScanRandom)
+	fmt.Printf("nuclei_template:  %s\n", NucleiTempLateVersion)
 }

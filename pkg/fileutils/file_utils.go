@@ -223,7 +223,9 @@ func ReadFilesFromEmbedFs(embedFs embed.FS, dir string) ([][]byte, error) {
 			if err != nil {
 				return err
 			}
-			allFilesContent = append(allFilesContent, data) // 添加到结果中
+			if filepath.Ext(path) == ".yaml" || filepath.Ext(path) == ".yml" {
+				allFilesContent = append(allFilesContent, data) // 添加到结果中
+			}
 		}
 		return nil
 	})

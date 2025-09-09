@@ -1,7 +1,8 @@
 package config
 
 var (
-	Version = "0.2.0"
+	Version               = "v0.2.0"
+	NucleiTempLateVersion = "v10.2.8"
 )
 
 var (

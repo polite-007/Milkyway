@@ -2,6 +2,7 @@ package protocols
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/polite007/Milkyway/pkg/neutron/commons"
@@ -17,16 +18,17 @@ func loadPayloads(payloads map[string]interface{}) (map[string][]string, error) 
 		switch pt := payload.(type) {
 		case string:
 			elements := strings.Split(pt, "\n")
-			//golint:gomnd // this is not a magic number
 			loadedPayloads[name] = elements
 		case []string:
 			loadedPayloads[name] = pt
-		case interface{}:
-			s := make([]string, len(payload.([]interface{})))
-			for i, v := range pt.([]interface{}) {
+		case []interface{}: // ✅ 这里改成 []interface{}
+			s := make([]string, len(pt))
+			for i, v := range pt {
 				s[i] = commons.ToString(v)
 			}
 			loadedPayloads[name] = s
+		default:
+			return nil, fmt.Errorf("unsupported payload type for %s: %T", name, payload)
 		}
 	}
 	return loadedPayloads, nil

@@ -53,6 +53,7 @@ func initNucleiPocList(dir string) error {
 			configsPocIDs.Store(pocId, true)
 		}
 		for _, poc := range pocFile {
+			// 检查nuclei_poc
 			t := &templates.Template{}
 			err = yaml.Unmarshal(poc, t)
 			if err != nil {
