@@ -41,7 +41,7 @@ func TestGenerateReport(t *testing.T) {
 				Protocol: "ssh",
 			},
 		},
-		WebList: []*config.Resps{
+		WebList: []*config.Resp{
 			{
 				Url: &url.URL{
 					Scheme: "http",

@@ -86,7 +86,7 @@ func Put(host string, header map[string]string, path string, body string) (*http
 	return resp, nil
 }
 
-func HandleResponse(resp *http.Response) (*config2.Resps, error) {
+func HandleResponse(resp *http.Response) (*config2.Resp, error) {
 	defer resp.Body.Close()
 	// 读取响应体
 	body, err := io.ReadAll(resp.Body)
@@ -126,7 +126,7 @@ func HandleResponse(resp *http.Response) (*config2.Resps, error) {
 	favHash := getfavicon(httpBody, resp.Request.URL.String())
 
 	// 返回结果
-	return &config2.Resps{
+	return &config2.Resp{
 		Url:        resp.Request.URL,
 		Title:      title,
 		Body:       httpBody,

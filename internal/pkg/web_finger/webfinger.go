@@ -3,7 +3,7 @@ package web_finger
 import (
 	"encoding/json"
 	"fmt"
-	config2 "github.com/polite007/Milkyway/internal/config"
+	"github.com/polite007/Milkyway/internal/config"
 	"strings"
 	"sync"
 
@@ -32,8 +32,8 @@ var (
 
 func initFingerFile() {
 	fingerFile := "finger/finger_new.json"
-	if config2.Get().FingerFile != "" {
-		fingerFile = config2.Get().FingerFile
+	if config.Get().FingerFile != "" {
+		fingerFile = config.Get().FingerFile
 	}
 	content, err := static.EmbedFS.ReadFile(fingerFile)
 	if err != nil {
@@ -45,7 +45,7 @@ func initFingerFile() {
 	}
 }
 
-func WebFinger(resp *config2.Resps) (string, []string) {
+func WebFinger(resp *config.Resp) (string, []string) {
 	once.Do(initFingerFile)
 	headers := strutils.MapToJson(resp.Header)
 	var cms []string

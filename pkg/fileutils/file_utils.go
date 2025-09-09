@@ -39,7 +39,10 @@ func ReadLines(filename string) ([]string, error) {
 	scanner := bufio.NewScanner(file)
 	lines := []string{}
 	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
+		s := scanner.Text()
+		if s != "" {
+			lines = append(lines, s)
+		}
 	}
 
 	if err = scanner.Err(); err != nil {

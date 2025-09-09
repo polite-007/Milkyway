@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	config2 "github.com/polite007/Milkyway/internal/config"
+	config "github.com/polite007/Milkyway/internal/config"
 	"net"
 	"time"
 
@@ -21,18 +21,18 @@ func mysqlConn(ip string, port int, user, pass string) error {
 	})
 
 	Host, Port, Username, Password := ip, port, user, pass
-	dataSourceName := fmt.Sprintf("%v:%v@tcp(%v:%v)/mysql?charset=utf8&timeout=%v", Username, Password, Host, Port, config2.Get().PortScanTimeout)
+	dataSourceName := fmt.Sprintf("%v:%v@tcp(%v:%v)/mysql?charset=utf8&timeout=%v", Username, Password, Host, Port, config.Get().PortScanTimeout)
 	db, err := sql.Open("mysql", dataSourceName)
 	if err == nil {
-		db.SetConnMaxLifetime(config2.Get().PortScanTimeout)
-		db.SetConnMaxIdleTime(config2.Get().PortScanTimeout)
+		db.SetConnMaxLifetime(config.Get().PortScanTimeout)
+		db.SetConnMaxIdleTime(config.Get().PortScanTimeout)
 		db.SetMaxIdleConns(0)
 		defer db.Close()
 		err = db.Ping()
 		if err == nil {
 			result := fmt.Sprintf("[%s] %v:%v %v:%v\n", color.Red("mysql"), Host, Port, color.Red(Username), color.Red(Password))
 			logger.OutLog(result)
-			config2.Get().Result.AddProtocolVul(Host, port, "mysql", fmt.Sprintf("%v:%v", Username, Password))
+			config.GetAssetsResult().AddProtocolVul(Host, port, "mysql", fmt.Sprintf("%v:%v", Username, Password))
 		} else {
 			return err
 		}
@@ -41,8 +41,8 @@ func mysqlConn(ip string, port int, user, pass string) error {
 }
 
 func mysqlScan(ip string, port int) {
-	for _, user := range config2.GetDict().UserMysql {
-		for _, pass := range config2.GetDict().PasswordMysql {
+	for _, user := range config.GetDict().UserMysql {
+		for _, pass := range config.GetDict().PasswordMysql {
 			if err := mysqlConn(ip, port, user, pass); err == nil {
 				return
 			}

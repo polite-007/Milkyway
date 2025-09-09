@@ -1,24 +1,52 @@
 package task
 
 import (
-	config2 "github.com/polite007/Milkyway/internal/config"
+	"github.com/polite007/Milkyway/internal/config"
 	"math/rand"
 	"time"
 
 	"github.com/polite007/Milkyway/internal/service/protocol/protocol_scan"
 )
 
-// newPortScanTask 返回存活的端口和对应的协议
-func newPortScanTask(ipPortList []*config2.IpPorts) (*config2.TargetList, error) {
-	var PortScanTask []*Addr
-	NewPool := NewWorkPool(config2.Get().WorkPoolNum)
+func TransformBatch(results []*config.PortScanTaskResult) []*config.PortScanTaskResultTwo {
+	hostMap := make(map[string][]struct {
+		Port     int
+		Protocol string
+	})
+
+	// 聚合：同一个 Host 合并 Ports
+	for _, r := range results {
+		hostMap[r.Host] = append(hostMap[r.Host], struct {
+			Port     int
+			Protocol string
+		}{
+			Port:     r.Port,
+			Protocol: r.Protocol,
+		})
+	}
+
+	// 转换为目标结构
+	var merged []*config.PortScanTaskResultTwo
+	for host, ports := range hostMap {
+		merged = append(merged, &config.PortScanTaskResultTwo{
+			Host:  host,
+			Ports: ports,
+		})
+	}
+
+	return merged
+}
+
+func newPortScanTask(ipPortList []*config.PortScanTaskPayload, isRandom bool) ([]*config.PortScanTaskResult, error) {
+	NewPool := NewWorkPool(config.Get().WorkPoolNum)
 	NewPool.Start()
+
 	f := func(args any) (any, error) {
 		p, ok := args.(*Addr)
 		if !ok {
-			return nil, config2.GetErrors().ErrAssertion
+			return nil, config.GetErrors().ErrAssertion
 		}
-		protocol, isAlive := protocol_scan.PortScan(p.host, p.port, config2.Get().PortScanTimeout)
+		protocol, isAlive := protocol_scan.PortScan(p.host, p.port, config.Get().PortScanTimeout)
 		if !isAlive {
 			return nil, nil
 		} else {
@@ -29,87 +57,51 @@ func newPortScanTask(ipPortList []*config2.IpPorts) (*config2.TargetList, error)
 			}, nil
 		}
 	}
-	var size int
+
+	var tasks []*Addr
+
 	for _, ipPort := range ipPortList {
-		size += len(ipPort.Ports)
 		for _, port := range ipPort.Ports {
-			PortScanTask = append(PortScanTask, &Addr{
+			tasks = append(tasks, &Addr{
 				host: ipPort.IP,
 				port: port,
 			})
 		}
 	}
-	//proGress := progress.GetNewProgress(size)
 
-	rand.Seed(time.Now().UnixNano())
-	rand.Shuffle(len(PortScanTask), func(i, j int) {
-		PortScanTask[i], PortScanTask[j] = PortScanTask[j], PortScanTask[i]
-	})
+	if isRandom {
+		// 2. 打乱任务切片
+		rand.Seed(time.Now().UnixNano())
+		rand.Shuffle(len(tasks), func(i, j int) {
+			tasks[i], tasks[j] = tasks[j], tasks[i]
+		})
+	}
+
 	go func() {
-		for _, p := range PortScanTask {
+		for _, task := range tasks {
 			NewPool.Wg.Add(1)
-			NewPool.TaskQueue <- newTask(p, f)
+			NewPool.TaskQueue <- newTask(&Addr{
+				host: task.host,
+				port: task.port,
+			}, f)
 		}
 		close(NewPool.TaskQueue) // 关闭任务队列
 		NewPool.Wg.Wait()        // 等待消费者执行完全部任务
 		close(NewPool.Result)    // 关闭结果队列
 	}()
 
-	result := config2.NewIpPortProtocolList()
-	for res := range NewPool.Result {
-		//proGress.Add(1)
-		if res == nil {
-			continue
-		}
-		resultSimple := res.(*Addr)
-		result.Add(resultSimple.host, resultSimple.port, resultSimple.protocol)
-	}
-	return result, nil
-}
+	result := make([]*config.PortScanTaskResult, 0, len(NewPool.Result))
 
-func newPortScanTaskRandom(ipPortList []*config2.IpPorts) (*config2.TargetList, error) {
-	NewPool := NewWorkPool(config2.Get().WorkPoolNum)
-	NewPool.Start()
-
-	f := func(args any) (any, error) {
-		p, ok := args.(*Addr)
-		if !ok {
-			return nil, config2.GetErrors().ErrAssertion
-		}
-		protocol, isAlive := protocol_scan.PortScan(p.host, p.port, config2.Get().PortScanTimeout)
-		if !isAlive {
-			return nil, nil
-		} else {
-			return &Addr{
-				host:     p.host,
-				port:     p.port,
-				protocol: protocol,
-			}, nil
-		}
-	}
-
-	go func() {
-		for _, ipPort := range ipPortList {
-			for _, port := range ipPort.Ports {
-				NewPool.Wg.Add(1)
-				NewPool.TaskQueue <- newTask(&Addr{
-					host: ipPort.IP,
-					port: port,
-				}, f)
-			}
-		}
-		close(NewPool.TaskQueue) // 关闭任务队列
-		NewPool.Wg.Wait()        // 等待消费者执行完全部任务
-		close(NewPool.Result)    // 关闭结果队列
-	}()
-
-	result := config2.NewIpPortProtocolList()
 	for res := range NewPool.Result {
 		if res == nil {
 			continue
 		}
 		resultSimple := res.(*Addr)
-		result.Add(resultSimple.host, resultSimple.port, resultSimple.protocol)
+		result = append(result, &config.PortScanTaskResult{
+			Host:     resultSimple.host,
+			Port:     resultSimple.port,
+			Protocol: resultSimple.protocol,
+		})
 	}
 	return result, nil
 }

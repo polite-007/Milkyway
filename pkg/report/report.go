@@ -11,6 +11,54 @@ import (
 	"github.com/polite007/Milkyway/internal/config"
 )
 
+// ReportData 报告数据结构
+type ReportData struct {
+	Timestamp         string
+	TotalAssets       int
+	TotalVulns        int
+	HighRiskVulns     int
+	SecurityRiskCount int
+	IpList            []IPData
+}
+
+// IPData IP数据结构
+type IPData struct {
+	IP       string
+	Type     string
+	HasVul   bool
+	HasWeb   bool
+	Ports    []PortInfo
+	Vulns    []VulnInfo
+	WebInfos []WebInfo
+}
+
+// PortInfo 端口信息
+type PortInfo struct {
+	Port     int
+	Protocol string
+}
+
+// VulnInfo 漏洞信息
+type VulnInfo struct {
+	Type        string
+	Name        string
+	Level       string
+	Description string
+	Recovery    string
+	URL         string
+	Protocol    string
+}
+
+// WebInfo Web服务信息
+type WebInfo struct {
+	URL             string
+	Title           string
+	Cms             string
+	BodyLength      int
+	StatusCode      int
+	StatusCodeClass string
+}
+
 // GenerateReport 生成HTML格式的扫描报告
 func GenerateReport(result *config.AssetsResult) error {
 	// 创建报告目录
@@ -29,9 +77,216 @@ func GenerateReport(result *config.AssetsResult) error {
 		return fmt.Errorf("创建报告文件失败: %v", err)
 	}
 	defer file.Close()
-	// HTML模板
-	const reportTemplate = `
-<!DOCTYPE html>
+
+	// 准备报告数据
+	data, err := prepareReportData(result)
+	if err != nil {
+		return fmt.Errorf("准备报告数据失败: %v", err)
+	}
+
+	// 解析并执行模板
+	tmpl, err := template.New("report").Parse(getReportTemplate())
+	if err != nil {
+		return fmt.Errorf("解析模板失败: %v", err)
+	}
+
+	if err := tmpl.Execute(file, data); err != nil {
+		return fmt.Errorf("执行模板失败: %v", err)
+	}
+
+	// 输出报告路径
+	absPath, err := filepath.Abs(reportFile)
+	if err != nil {
+		return fmt.Errorf("获取报告绝对路径失败: %v", err)
+	}
+
+	fileURL := strings.ReplaceAll(absPath, "\\", "/")
+	fmt.Printf("报告已生成, 请复制以下地址到浏览器访问: %s\n", fileURL)
+	return nil
+}
+
+// prepareReportData 准备报告数据
+func prepareReportData(result *config.AssetsResult) (*ReportData, error) {
+	// 计算高危漏洞数量
+	highRiskCount := calculateHighRiskVulns(result)
+
+	// 计算等保风险数量
+	securityRiskCount := calculateSecurityRiskCount(result)
+
+	// 处理IP列表数据
+	ipList, err := processIPList(result)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ReportData{
+		Timestamp:         time.Now().Format("2006-01-02 15:04:05"),
+		TotalAssets:       len(result.IpPortList),
+		TotalVulns:        len(result.WebVul) + len(result.ProtocolVul),
+		HighRiskVulns:     highRiskCount,
+		SecurityRiskCount: securityRiskCount,
+		IpList:            ipList,
+	}, nil
+}
+
+// calculateHighRiskVulns 计算高危漏洞数量
+func calculateHighRiskVulns(result *config.AssetsResult) int {
+	count := 0
+	for _, vul := range result.WebVul {
+		if vul.Level == "高危" {
+			count++
+		}
+	}
+	for _, vul := range result.ProtocolVul {
+		if strings.Contains(strings.ToLower(vul.Message), "高危") {
+			count++
+		}
+	}
+	return count
+}
+
+// calculateSecurityRiskCount 计算等保风险数量
+func calculateSecurityRiskCount(result *config.AssetsResult) int {
+	count := 0
+	for _, ipPort := range result.IpPortList {
+		if ipPort.Port != 80 && ipPort.Port != 443 {
+			count++
+		}
+	}
+	return count
+}
+
+// processIPList 处理IP列表数据
+func processIPList(result *config.AssetsResult) ([]IPData, error) {
+	var ipList []IPData
+
+	for _, ip := range result.IpActiveList {
+		ipData := IPData{
+			IP:   ip,
+			Type: "IP",
+		}
+
+		// 收集该IP的所有端口
+		ipData.Ports = collectPortsForIP(ip, result.IpPortList)
+
+		// 检查Web服务
+		ipData.HasWeb = checkWebService(ip, result.IpPortList)
+		if ipData.HasWeb {
+			ipData.Type = "Web"
+		}
+
+		// 收集漏洞信息
+		ipData.Vulns = collectVulnsForIP(ip, result)
+		ipData.HasVul = len(ipData.Vulns) > 0
+
+		// 收集Web服务信息
+		ipData.WebInfos = collectWebInfosForIP(ip, result.WebList)
+
+		ipList = append(ipList, ipData)
+	}
+
+	return ipList, nil
+}
+
+// collectPortsForIP 收集指定IP的端口信息
+func collectPortsForIP(ip string, ipPortList []*config.IpPortProtocol) []PortInfo {
+	var ports []PortInfo
+	for _, ipPort := range ipPortList {
+		if ipPort.IP == ip {
+			ports = append(ports, PortInfo{
+				Port:     ipPort.Port,
+				Protocol: ipPort.Protocol,
+			})
+		}
+	}
+	return ports
+}
+
+// checkWebService 检查是否有Web服务
+func checkWebService(ip string, ipPortList []*config.IpPortProtocol) bool {
+	for _, ipPort := range ipPortList {
+		if ipPort.IP == ip && (ipPort.Protocol == "http" || ipPort.Protocol == "https") {
+			return true
+		}
+	}
+	return false
+}
+
+// collectVulnsForIP 收集指定IP的漏洞信息
+func collectVulnsForIP(ip string, result *config.AssetsResult) []VulnInfo {
+	var vulns []VulnInfo
+
+	// 收集Web漏洞
+	for _, vul := range result.WebVul {
+		if strings.Contains(vul.VulUrl, ip) {
+			vulns = append(vulns, VulnInfo{
+				Type:        "Web",
+				Name:        vul.VulName,
+				Level:       vul.Level,
+				Description: vul.Description,
+				Recovery:    vul.Recovery,
+				URL:         vul.VulUrl,
+				Protocol:    "http",
+			})
+		}
+	}
+
+	// 收集协议漏洞
+	for _, vul := range result.ProtocolVul {
+		if vul.IP == ip {
+			vulns = append(vulns, VulnInfo{
+				Type:        "Protocol",
+				Name:        vul.Protocol,
+				Level:       "中危",
+				Description: vul.Message,
+				Recovery:    "建议关闭不必要的端口或限制访问",
+				URL:         fmt.Sprintf("%s://%s:%d", vul.Protocol, vul.IP, vul.Port),
+				Protocol:    vul.Protocol,
+			})
+		}
+	}
+
+	return vulns
+}
+
+// collectWebInfosForIP 收集指定IP的Web服务信息
+func collectWebInfosForIP(ip string, webList []*config.Resp) []WebInfo {
+	var webInfos []WebInfo
+
+	for _, web := range webList {
+		webURL := web.Url.String()
+		webURL = strings.TrimRight(webURL, "/")
+
+		if strings.Contains(webURL, ip) {
+			webInfo := WebInfo{
+				URL:        webURL,
+				Title:      web.Title,
+				Cms:        web.Cms,
+				BodyLength: len(web.Body),
+				StatusCode: web.StatusCode,
+			}
+
+			// 设置状态码分类
+			if webInfo.StatusCode >= 200 && webInfo.StatusCode < 300 {
+				webInfo.StatusCodeClass = "2xx"
+			} else if webInfo.StatusCode >= 300 && webInfo.StatusCode < 400 {
+				webInfo.StatusCodeClass = "3xx"
+			} else if webInfo.StatusCode >= 400 && webInfo.StatusCode < 500 {
+				webInfo.StatusCodeClass = "4xx"
+			} else if webInfo.StatusCode >= 500 {
+				webInfo.StatusCodeClass = "5xx"
+			}
+
+			webInfos = append(webInfos, webInfo)
+		}
+	}
+
+	return webInfos
+}
+
+// getReportTemplate 获取报告模板
+func getReportTemplate() string {
+	return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -61,14 +316,17 @@ func GenerateReport(result *config.AssetsResult) error {
             --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
+        /* 主题切换按钮 */
         .theme-switch {
             position: absolute;
             right: 20px;
-            background: rgba(255, 255, 255, 0.1);
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
             border: none;
             border-radius: 50%;
-            width: 36px;
-            height: 36px;
+            width: 40px;
+            height: 40px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -76,21 +334,26 @@ func GenerateReport(result *config.AssetsResult) error {
             color: white;
             font-size: 18px;
             transition: all 0.3s ease;
-            z-index: 1;
+            z-index: 10;
         }
 
         .theme-switch:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-50%) scale(1.1);
         }
 
+        /* 底部样式 */
         .footer {
-            margin-top: 80px;
+            margin-top: 60px;
             padding: 40px 20px;
             text-align: center;
             color: var(--text-color);
             opacity: 0.7;
             position: relative;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
         }
 
         .footer::before {
@@ -116,6 +379,7 @@ func GenerateReport(result *config.AssetsResult) error {
             color: var(--text-color);
             opacity: 0.7;
             transition: all 0.3s ease;
+            text-decoration: none;
         }
 
         .footer-icon:hover {
@@ -123,84 +387,68 @@ func GenerateReport(result *config.AssetsResult) error {
             transform: translateY(-3px);
         }
 
-        .summary-item {
-            background: var(--card-bg);
-            box-shadow: var(--card-shadow);
-        }
-
-        .ip-card {
-            background: var(--card-bg);
-            box-shadow: var(--card-shadow);
-        }
-
-        .vul-item {
-            background: var(--card-bg);
-            border-radius: 6px;
-            padding: 15px;
-            margin-bottom: 8px;
-            border-left: 3px solid var(--primary-color);
-        }
-
-        .vul-item .vul-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .vul-item .vul-title {
-            font-size: 16px;
-            font-weight: bold;
-            color: var(--text-color);
-        }
-
-        .vul-item .vul-url {
-            font-size: 14px;
-            color: var(--text-color);
-            word-break: break-all;
-            margin: 5px 0;
-            padding: 5px;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-        }
-
-        .vul-item .vul-protocol {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            background: var(--primary-color);
-            color: white;
-            margin-right: 8px;
-        }
-
-        .vul-item .vul-description {
-            margin: 10px 0;
-            color: var(--text-color);
-            opacity: 0.9;
-        }
-
-        .vul-item .vul-recovery {
-            margin-top: 10px;
-            padding: 10px;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            font-size: 14px;
-        }
-
+        /* 搜索框样式 */
         .search-box {
             background: var(--card-bg);
             box-shadow: var(--card-shadow);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
         }
 
         .search-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
             background: var(--card-bg);
             color: var(--text-color);
-            border-color: var(--border-color);
+            outline: none;
+            transition: border-color 0.3s ease;
         }
 
+        .search-input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-color);
+            opacity: 0.6;
+        }
+
+        /* 过滤按钮 */
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-button {
+            padding: 8px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 20px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .filter-button:hover {
+            border-color: var(--primary-color);
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .filter-button.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* 基础样式 */
         * {
             margin: 0;
             padding: 0;
@@ -212,17 +460,22 @@ func GenerateReport(result *config.AssetsResult) error {
             line-height: 1.6;
             color: var(--text-color);
             background-color: var(--background-color);
+            min-height: 100vh;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
+        /* 头部样式 */
         .header {
             text-align: center;
-            padding: 40px 0;
+            padding: 40px 20px;
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
             border-radius: 12px;
@@ -230,124 +483,120 @@ func GenerateReport(result *config.AssetsResult) error {
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             position: relative;
             overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px 40px;
         }
 
-        .header-content {
-            text-align: center;
-            flex: 1;
+        .header-content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header-content p {
+            font-size: 1.1rem;
+            opacity: 0.9;
         }
 
         .logo {
             position: absolute;
             left: 40px;
+            top: 50%;
+            transform: translateY(-50%);
             font-size: 24px;
             font-weight: bold;
+            text-decoration: none;
+            color: white;
+            transition: opacity 0.3s ease;
         }
 
-        .logo::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 2px;
-            background: white;
-            transition: width 0.3s ease;
+        .logo:hover {
+            opacity: 0.8;
         }
 
-        .logo:hover::after {
-            width: 80%;
-        }
-
+        /* 统计概览样式 */
         .summary {
-            display: flex;
-            justify-content: space-around;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
             margin: 20px 0;
-            flex-wrap: wrap;
         }
 
         .summary-item {
-            text-align: center;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            min-width: 200px;
-            margin: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s ease;
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 20px;
         }
 
         .summary-item:hover {
             transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
 
         .summary-icon {
-            font-size: 24px;
-            width: 40px;
-            height: 40px;
+            font-size: 32px;
+            width: 60px;
+            height: 60px;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 50%;
-            background: var(--card-bg);
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
         }
 
         .summary-content {
-            text-align: left;
+            flex: 1;
         }
 
-        .summary-number {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .summary-number.ip {
-            color: #007AFF;
-        }
-
-        .summary-number.web {
-            color: #FF9500;
-        }
-
-        .summary-number.vul {
-            color: #FF3B30;
-        }
-
-        .summary-label {
-            color: #666;
+        .summary-content h3 {
             font-size: 14px;
+            color: var(--text-color);
+            opacity: 0.7;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
+        .summary-content p {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .summary-item:nth-child(1) .summary-content p { color: #007AFF; }
+        .summary-item:nth-child(2) .summary-content p { color: #FF3B30; }
+        .summary-item:nth-child(3) .summary-content p { color: #FF9500; }
+        .summary-item:nth-child(4) .summary-content p { color: #34C759; }
+
+        /* IP列表布局 - 改为垂直排列 */
         .ip-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
             margin-top: 20px;
+            flex: 1;
         }
 
+        /* IP卡片样式 - 横杠样式 */
         .ip-card {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
             transition: all 0.3s ease;
             cursor: pointer;
             position: relative;
             overflow: hidden;
+            border: 1px solid var(--border-color);
+            margin-bottom: 10px;
         }
 
         .ip-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .ip-card.has-vul {
@@ -362,22 +611,55 @@ func GenerateReport(result *config.AssetsResult) error {
             border-left: 4px solid var(--border-color);
         }
 
+        .ip-card.expanded {
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 20px rgba(0, 122, 255, 0.15);
+        }
+
+        /* 卡片头部 - 横杠样式 */
         .ip-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            padding: 15px 20px;
+            background: var(--card-bg);
+            border-radius: 8px;
+            position: relative;
+            min-height: 60px;
+        }
+
+        .ip-header::after {
+            content: '▼';
+            position: absolute;
+            right: 20px;
+            color: var(--text-color);
+            opacity: 0.5;
+            font-size: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .ip-card.expanded .ip-header::after {
+            transform: rotate(180deg);
         }
 
         .ip-title {
             font-size: 18px;
             font-weight: bold;
+            color: var(--text-color);
+            flex: 1;
+        }
+
+        .ip-header-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .ip-badge {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: bold;
             color: white;
         }
 
@@ -389,10 +671,34 @@ func GenerateReport(result *config.AssetsResult) error {
             background: var(--primary-color);
         }
 
+        .ip-badge.other {
+            background: var(--border-color);
+        }
+
+        .ip-stats {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .ip-stat {
+            font-size: 12px;
+            color: var(--text-color);
+            opacity: 0.7;
+            padding: 2px 6px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+        }
+
+        [data-theme="dark"] .ip-stat {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* 卡片内容 - 默认隐藏 */
         .ip-content {
             display: none;
-            margin-top: 15px;
-            padding-top: 15px;
+            padding: 0 20px 20px 20px;
+            background: var(--card-bg);
             border-top: 1px solid var(--border-color);
         }
 
@@ -400,36 +706,24 @@ func GenerateReport(result *config.AssetsResult) error {
             display: block;
         }
 
-        .asset-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .asset-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 15px;
-            box-shadow: var(--card-shadow);
-            margin-bottom: 15px;
-        }
-
-        .asset-ip {
-            font-size: 18px;
+        /* 内容区域标题样式 */
+        .ip-content h4 {
+            color: var(--text-color);
+            font-size: 16px;
             font-weight: bold;
-            cursor: pointer;
-            padding: 5px;
-            border-radius: 4px;
-            transition: background-color 0.3s;
+            margin: 20px 0 15px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--primary-color);
+            display: inline-block;
         }
 
-        .asset-ip:hover {
-            background-color: rgba(0, 0, 0, 0.05);
+        .ip-content h4:first-child {
+            margin-top: 0;
         }
 
+        /* 端口信息样式 */
         .asset-ports {
-            margin-top: 10px;
+            margin-top: 15px;
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
@@ -437,43 +731,77 @@ func GenerateReport(result *config.AssetsResult) error {
 
         .port-item {
             background: var(--card-bg);
-            padding: 8px 12px;
-            border-radius: 6px;
+            padding: 10px 15px;
+            border-radius: 8px;
             border: 1px solid var(--border-color);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .port-item:hover {
+            border-color: var(--primary-color);
+            background: rgba(0, 122, 255, 0.05);
         }
 
         .port-number {
             font-weight: bold;
+            color: var(--text-color);
+            font-size: 16px;
         }
 
         .protocol-badge {
             background: var(--primary-color);
             color: white;
-            padding: 2px 8px;
-            border-radius: 4px;
+            padding: 4px 10px;
+            border-radius: 12px;
             font-size: 12px;
+            font-weight: bold;
         }
 
+        /* Web信息样式 */
         .web-info {
-            margin-top: 15px;
-            padding-top: 15px;
+            margin-top: 20px;
+            padding-top: 20px;
             border-top: 1px solid var(--border-color);
         }
 
-        .web-url {
-            word-break: break-all;
-            margin-bottom: 8px;
+        .web-service {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
         }
 
-        .web-title, .web-cms {
+        .web-info-item {
+            display: flex;
+            align-items: flex-start;
+            margin: 10px 0;
+            gap: 15px;
+        }
+
+        .web-info-label {
+            min-width: 80px;
             color: var(--text-color);
-            opacity: 0.8;
-            margin-bottom: 5px;
+            opacity: 0.7;
+            font-weight: 500;
         }
 
+        .web-info-value {
+            flex: 1;
+            word-break: break-all;
+            color: var(--text-color);
+        }
+
+        .web-divider {
+            margin: 15px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 漏洞信息样式 */
         .vul-section {
             margin-top: 20px;
             padding-top: 20px;
@@ -484,14 +812,16 @@ func GenerateReport(result *config.AssetsResult) error {
             margin-bottom: 15px;
             color: var(--text-color);
             font-size: 18px;
+            font-weight: bold;
         }
 
         .vul-item {
             background: var(--card-bg);
             border-radius: 8px;
-            padding: 15px;
+            padding: 20px;
             margin-bottom: 15px;
             border-left: 4px solid var(--primary-color);
+            box-shadow: var(--card-shadow);
         }
 
         .vul-item.high {
@@ -510,18 +840,18 @@ func GenerateReport(result *config.AssetsResult) error {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
 
         .vul-title {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: bold;
             color: var(--text-color);
         }
 
         .vul-level {
-            padding: 4px 8px;
-            border-radius: 4px;
+            padding: 6px 12px;
+            border-radius: 20px;
             font-size: 12px;
             font-weight: bold;
         }
@@ -543,64 +873,52 @@ func GenerateReport(result *config.AssetsResult) error {
 
         .vul-url {
             word-break: break-all;
-            margin: 10px 0;
-            padding: 8px;
+            margin: 15px 0;
+            padding: 12px;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 4px;
+            border-radius: 6px;
             font-size: 14px;
+            font-family: monospace;
         }
 
         .vul-protocol {
             display: inline-block;
-            padding: 2px 8px;
-            border-radius: 4px;
+            padding: 4px 10px;
+            border-radius: 12px;
             font-size: 12px;
             background: var(--primary-color);
             color: white;
             margin: 5px 0;
+            font-weight: bold;
         }
 
         .vul-description {
-            margin: 10px 0;
+            margin: 15px 0;
             color: var(--text-color);
             opacity: 0.9;
             line-height: 1.6;
         }
 
         .vul-recovery {
-            margin-top: 10px;
-            padding: 10px;
+            margin-top: 15px;
+            padding: 15px;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 4px;
+            border-radius: 6px;
             font-size: 14px;
         }
 
-        .web-info-item {
-            display: flex;
-            align-items: flex-start;
-            margin: 8px 0;
-            gap: 10px;
+        .vul-recovery strong {
+            color: var(--primary-color);
         }
 
-        .web-info-label {
-            min-width: 80px;
-            color: var(--text-color);
-            opacity: 0.7;
-        }
-
-        .web-info-value {
-            flex: 1;
-            word-break: break-all;
-            color: var(--text-color);
-        }
-
+        /* 状态码样式 */
         .status-code {
             display: inline-flex;
             align-items: center;
-            padding: 2px 8px;
-            border-radius: 4px;
+            padding: 4px 10px;
+            border-radius: 12px;
             font-size: 12px;
             font-weight: bold;
         }
@@ -645,136 +963,76 @@ func GenerateReport(result *config.AssetsResult) error {
             color: #f44336;
         }
 
-        .search-box {
-            margin: 20px 0;
-            padding: 10px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header {
+                padding: 20px 10px;
+            }
+            
+            .header-content h1 {
+                font-size: 2rem;
+            }
+            
+            .logo {
+                position: static;
+                transform: none;
+                margin-bottom: 10px;
+            }
+            
+            .summary {
+                grid-template-columns: 1fr;
+            }
+            
+            .ip-header {
+                padding: 12px 15px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .ip-header-info {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .ip-stats {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+            
+            .ip-stat {
+                font-size: 11px;
+                padding: 1px 4px;
+            }
+            
+            .filter-buttons {
+                justify-content: center;
+            }
+            
+            .ip-content {
+                padding: 0 15px 15px 15px;
+            }
+            
+            .asset-ports {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .port-item {
+                padding: 8px 12px;
+            }
         }
 
-        .search-input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 16px;
-            outline: none;
-            transition: border-color 0.3s ease;
-        }
-
-        .search-input:focus {
-            border-color: var(--primary-color);
-        }
-
-        .filter-buttons {
-            display: flex;
-            gap: 10px;
-            margin: 10px 0;
-        }
-
-        .filter-button {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
-            background: var(--primary-color);
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .filter-button:hover {
-            background: var(--secondary-color);
-        }
-
-        .filter-button.active {
-            background: var(--secondary-color);
-        }
-
-        [data-theme="dark"] .vul-item .vul-url {
-            background: var(--card-bg);
-            border-color: var(--border-color);
-        }
-
-        [data-theme="dark"] .vul-item .vul-recovery {
-            background: var(--card-bg);
-            border-color: var(--border-color);
-        }
-
-        [data-theme="dark"] .summary-icon {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-        }
-
-        [data-theme="dark"] .vul-item {
-            background: var(--card-bg);
-            border-color: var(--border-color);
-        }
-
-        [data-theme="dark"] .vul-item .vul-level {
-            background: var(--card-bg);
-            border-color: var(--border-color);
-        }
-
-        [data-theme="dark"] .vul-item .vul-description {
-            background: var(--card-bg);
-            border-color: var(--border-color);
-        }
-
-        [data-theme="dark"] .vul-item .vul-recovery {
-            background: var(--card-bg);
-            border-color: var(--border-color);
-        }
-
-        [data-theme="dark"] .vul-item .vul-url {
-            background: var(--card-bg);
-            border-color: var(--border-color);
-        }
-
-        [data-theme="dark"] .vul-item .vul-protocol {
-            background: var(--card-bg);
-            border-color: var(--border-color);
-        }
-
-        .web-info {
-            margin-top: 10px;
-            padding: 10px;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            font-size: 14px;
-        }
-
-        .web-info-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin-top: 5px;
-        }
-
-        .web-info-tag {
-            background: var(--primary-color);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-        }
-
-        .web-service {
-            margin-bottom: 10px;
-        }
-
-        .web-divider {
-            margin: 10px 0;
-            border: none;
-            border-top: 1px solid var(--border-color);
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <a href="https://github.com/polite-007/Milkyway" target="_blank" class="logo" style="text-decoration: none; color: white;">Milkyway</a>
+            <a href="https://github.com/polite-007/Milkyway" target="_blank" class="logo">Milkyway</a>
             <div class="header-content">
                 <h1>安全扫描报告</h1>
                 <p>扫描时间: {{.Timestamp}}</p>
@@ -825,19 +1083,34 @@ func GenerateReport(result *config.AssetsResult) error {
 
         <div class="ip-grid">
             {{range .IpList}}
-            <div class="ip-card" data-ip="{{.IP}}">
+            <div class="ip-card {{if .HasVul}}has-vul{{else if .HasWeb}}has-web{{else}}other{{end}}" data-ip="{{.IP}}">
                 <div class="ip-header" onclick="toggleContent('{{.IP}}')">
                     <div class="ip-title">{{.IP}}</div>
-                    {{if .HasVul}}
-                    <div class="ip-badge vul">存在漏洞</div>
-                    {{else if .HasWeb}}
-                    <div class="ip-badge web">Web服务</div>
-                    {{else}}
-                    <div class="ip-badge other">其他</div>
-                    {{end}}
+                    <div class="ip-header-info">
+                        <div class="ip-stats">
+                            {{if .Ports}}
+                            <span class="ip-stat">{{len .Ports}}端口</span>
+                            {{end}}
+                            {{if .WebInfos}}
+                            <span class="ip-stat">{{len .WebInfos}}Web</span>
+                            {{end}}
+                            {{if .Vulns}}
+                            <span class="ip-stat">{{len .Vulns}}漏洞</span>
+                            {{end}}
+                        </div>
+                        {{if .HasVul}}
+                        <div class="ip-badge vul">存在漏洞</div>
+                        {{else if .HasWeb}}
+                        <div class="ip-badge web">Web服务</div>
+                        {{else}}
+                        <div class="ip-badge other">其他</div>
+                        {{end}}
+                    </div>
                 </div>
-                <div class="ip-content" id="content-{{.IP}}" style="display: none;">
+                <div class="ip-content" id="content-{{.IP}}">
+                    {{if .Ports}}
                     <div class="asset-ports">
+                        <h4>端口信息</h4>
                         {{range .Ports}}
                         <div class="port-item">
                             <span class="port-number">{{.Port}}</span>
@@ -845,8 +1118,10 @@ func GenerateReport(result *config.AssetsResult) error {
                         </div>
                         {{end}}
                     </div>
+                    {{end}}
                     {{if .WebInfos}}
                     <div class="web-info">
+                        <h4>Web服务信息</h4>
                         {{range .WebInfos}}
                         <div class="web-service">
                             <div class="web-info-item">
@@ -884,7 +1159,7 @@ func GenerateReport(result *config.AssetsResult) error {
                     {{end}}
                     {{if .Vulns}}
                     <div class="vul-section">
-                        <h3>漏洞信息</h3>
+                        <h4>漏洞信息</h4>
                         {{range .Vulns}}
                         <div class="vul-item {{.Level}}">
                             <div class="vul-header">
@@ -918,295 +1193,198 @@ func GenerateReport(result *config.AssetsResult) error {
     </div>
 
     <script>
-        // 添加调试日志
-        console.log('Script loaded');
+        // 全局变量
+        let allIPCards = [];
+        let currentFilter = 'all';
 
-        function scrollToSection(sectionId) {
-            const section = document.getElementById(sectionId);
-            if (section) {
-                section.scrollIntoView({ behavior: 'smooth' });
-            }
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('页面加载完成');
+            
+            // 收集所有IP卡片
+            allIPCards = Array.from(document.querySelectorAll('.ip-card'));
+            console.log('找到IP卡片数量:', allIPCards.length);
+            
+            // 初始化主题
+            initTheme();
+            
+            // 初始化搜索功能
+            initSearch();
+            
+            // 初始化过滤功能
+            initFilter();
+        });
+
+        // 初始化主题
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.body.setAttribute('data-theme', savedTheme);
+            console.log('主题初始化:', savedTheme);
         }
 
+        // 切换主题
         function toggleTheme() {
             const body = document.body;
             const currentTheme = body.getAttribute('data-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
             body.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
+            
+            console.log('主题切换:', currentTheme, '->', newTheme);
         }
 
-        // 初始化主题
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        document.body.setAttribute('data-theme', savedTheme);
-
-        // 切换内容显示/隐藏
-        function toggleContent(ip) {
-            const content = document.getElementById('content-' + ip);
-            if (content) {
-                const isHidden = content.style.display === 'none' || !content.style.display;
-                content.style.display = isHidden ? 'block' : 'none';
+        // 初始化搜索功能
+        function initSearch() {
+            const searchInput = document.querySelector('.search-input');
+            if (searchInput) {
+                searchInput.addEventListener('input', function(e) {
+                    filterIPs(e.target.value);
+                });
             }
         }
 
-        // 添加错误处理
+        // 初始化过滤功能
+        function initFilter() {
+            const filterButtons = document.querySelectorAll('.filter-button');
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // 移除所有按钮的active类
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    // 添加当前按钮的active类
+                    this.classList.add('active');
+                    
+                    // 获取过滤类型
+                    const filterType = this.textContent.trim();
+                    if (filterType === '全部') currentFilter = 'all';
+                    else if (filterType === '存在漏洞') currentFilter = 'vul';
+                    else if (filterType === 'Web服务') currentFilter = 'web';
+                    else if (filterType === '其他') currentFilter = 'other';
+                    
+                    console.log('过滤类型:', currentFilter);
+                    
+                    // 应用过滤
+                    applyFilter();
+                });
+            });
+        }
+
+        // IP搜索功能
+        function filterIPs(searchTerm) {
+            console.log('搜索IP:', searchTerm);
+            
+            // 搜索时关闭所有卡片
+            closeAllCards();
+            
+            if (!searchTerm || searchTerm.trim() === '') {
+                // 如果搜索框为空，显示所有卡片
+                allIPCards.forEach(card => {
+                    card.style.display = 'block';
+                });
+            } else {
+                // 根据搜索词过滤
+                const searchLower = searchTerm.toLowerCase().trim();
+                allIPCards.forEach(card => {
+                    const ip = card.getAttribute('data-ip');
+                    if (ip && ip.toLowerCase().includes(searchLower)) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            }
+        }
+
+        // 应用过滤
+        function applyFilter() {
+            // 过滤时关闭所有卡片
+            closeAllCards();
+            
+            allIPCards.forEach(card => {
+                const hasVul = card.classList.contains('has-vul');
+                const hasWeb = card.classList.contains('has-web');
+                const isOther = card.classList.contains('other');
+                
+                let shouldShow = false;
+                
+                switch (currentFilter) {
+                    case 'all':
+                        shouldShow = true;
+                        break;
+                    case 'vul':
+                        shouldShow = hasVul;
+                        break;
+                    case 'web':
+                        shouldShow = hasWeb;
+                        break;
+                    case 'other':
+                        shouldShow = isOther;
+                        break;
+                }
+                
+                if (shouldShow) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // 切换内容显示/隐藏 - 手风琴效果
+        function toggleContent(ip) {
+            const content = document.getElementById('content-' + ip);
+            const card = document.querySelector('[data-ip="' + ip + '"]');
+            
+            if (content && card) {
+                const isHidden = content.style.display === 'none' || !content.style.display;
+                
+                if (isHidden) {
+                    // 先关闭所有其他卡片
+                    closeAllCards();
+                    
+                    // 展开当前卡片
+                    content.style.display = 'block';
+                    content.classList.add('active');
+                    card.classList.add('expanded');
+                } else {
+                    // 收起当前卡片
+                    content.style.display = 'none';
+                    content.classList.remove('active');
+                    card.classList.remove('expanded');
+                }
+                
+                console.log('切换IP内容显示:', ip, isHidden ? '显示' : '隐藏');
+            }
+        }
+
+        // 关闭所有卡片
+        function closeAllCards() {
+            const allCards = document.querySelectorAll('.ip-card');
+            const allContents = document.querySelectorAll('.ip-content');
+            
+            allCards.forEach(card => {
+                card.classList.remove('expanded');
+            });
+            
+            allContents.forEach(content => {
+                content.style.display = 'none';
+                content.classList.remove('active');
+            });
+        }
+
+        // 错误处理
         window.onerror = function(msg, url, lineNo, columnNo, error) {
-            console.error('Error: ' + msg + '\nURL: ' + url + '\nLine: ' + lineNo + '\nColumn: ' + columnNo + '\nError object: ' + JSON.stringify(error));
+            console.error('JavaScript错误:', {
+                message: msg,
+                url: url,
+                line: lineNo,
+                column: columnNo,
+                error: error
+            });
             return false;
         };
     </script>
 </body>
-</html>
-`
+</html>`
 
-	// 准备模板数据
-	type TemplateData struct {
-		Timestamp         string
-		TotalAssets       int
-		TotalVulns        int
-		HighRiskVulns     int
-		SecurityRiskCount int
-		IpList            []struct {
-			IP              string
-			Type            string
-			WebURL          string
-			Title           string
-			Cms             string
-			BodyLength      int
-			StatusCode      int
-			StatusCodeClass string
-			Tags            []string
-			Ports           []struct {
-				Port     int
-				Protocol string
-			}
-			HasVul bool
-			HasWeb bool
-			Vulns  []struct {
-				Type        string
-				Name        string
-				Level       string
-				Description string
-				Recovery    string
-				URL         string
-				Protocol    string
-			}
-			WebInfos []struct {
-				URL             string
-				Title           string
-				Cms             string
-				BodyLength      int
-				StatusCode      int
-				StatusCodeClass string
-			}
-		}
-		IpCount  int
-		WebCount int
-		VulCount int
-	}
-
-	// 计算高危漏洞数量
-	highRiskCount := 0
-	for _, vul := range result.WebVul {
-		if vul.Level == "高危" {
-			highRiskCount++
-		}
-	}
-	for _, vul := range result.ProtocolVul {
-		if strings.Contains(strings.ToLower(vul.Message), "高危") {
-			highRiskCount++
-		}
-	}
-
-	// 计算等保风险数量
-	securityRiskCount := 0
-	for _, ipPort := range result.IpPortList {
-		if ipPort.Port != 80 && ipPort.Port != 443 {
-			securityRiskCount++
-		}
-	}
-
-	data := TemplateData{
-		Timestamp:         time.Now().Format("2006-01-02 15:04:05"),
-		TotalAssets:       len(result.IpPortList),
-		TotalVulns:        len(result.WebVul) + len(result.ProtocolVul),
-		HighRiskVulns:     highRiskCount,
-		SecurityRiskCount: securityRiskCount,
-		IpCount:           len(result.IpActiveList),
-		WebCount:          len(result.WebList),
-		VulCount:          len(result.ProtocolVul) + len(result.WebVul),
-	}
-
-	// 处理IP列表数据
-	for _, ip := range result.IpActiveList {
-		ipData := struct {
-			IP              string
-			Type            string
-			WebURL          string
-			Title           string
-			Cms             string
-			BodyLength      int
-			StatusCode      int
-			StatusCodeClass string
-			Tags            []string
-			Ports           []struct {
-				Port     int
-				Protocol string
-			}
-			HasVul bool
-			HasWeb bool
-			Vulns  []struct {
-				Type        string
-				Name        string
-				Level       string
-				Description string
-				Recovery    string
-				URL         string
-				Protocol    string
-			}
-			WebInfos []struct {
-				URL             string
-				Title           string
-				Cms             string
-				BodyLength      int
-				StatusCode      int
-				StatusCodeClass string
-			}
-		}{
-			IP:   ip,
-			Type: "IP",
-		}
-
-		// 收集该IP的所有端口
-		for _, ipPort := range result.IpPortList {
-			if ipPort.IP == ip {
-				ipData.Ports = append(ipData.Ports, struct {
-					Port     int
-					Protocol string
-				}{
-					Port:     ipPort.Port,
-					Protocol: ipPort.Protocol,
-				})
-				// 检查是否是Web服务
-				if ipPort.Protocol == "http" || ipPort.Protocol == "https" {
-					ipData.HasWeb = true
-					ipData.Type = "Web"
-					// 构建完整的 URL
-					webURL := fmt.Sprintf("%s://%s:%d", ipPort.Protocol, ip, ipPort.Port)
-					ipData.WebURL = webURL
-				}
-			}
-		}
-
-		// 检查是否存在漏洞
-		for _, vul := range result.WebVul {
-			if strings.Contains(vul.VulUrl, ip) {
-				ipData.HasVul = true
-				ipData.Vulns = append(ipData.Vulns, struct {
-					Type        string
-					Name        string
-					Level       string
-					Description string
-					Recovery    string
-					URL         string
-					Protocol    string
-				}{
-					Type:        "Web",
-					Name:        vul.VulName,
-					Level:       vul.Level,
-					Description: vul.Description,
-					Recovery:    vul.Recovery,
-					URL:         vul.VulUrl,
-					Protocol:    "http",
-				})
-			}
-		}
-		for _, vul := range result.ProtocolVul {
-			if vul.IP == ip {
-				ipData.HasVul = true
-				ipData.Vulns = append(ipData.Vulns, struct {
-					Type        string
-					Name        string
-					Level       string
-					Description string
-					Recovery    string
-					URL         string
-					Protocol    string
-				}{
-					Type:        "Protocol",
-					Name:        vul.Protocol,
-					Level:       "中危",
-					Description: vul.Message,
-					Recovery:    "建议关闭不必要的端口或限制访问",
-					URL:         fmt.Sprintf("%s://%s:%d", vul.Protocol, vul.IP, vul.Port),
-					Protocol:    vul.Protocol,
-				})
-			}
-		}
-
-		// 添加Web服务信息
-		for _, web := range result.WebList {
-			webURL := web.Url.String()
-
-			// 移除末尾的斜杠进行比较
-			webURL = strings.TrimRight(webURL, "/")
-
-			// 检查 URL 是否包含当前 IP
-			if strings.Contains(webURL, ip) {
-
-				// 创建新的 Web 服务信息
-				webInfo := struct {
-					URL             string
-					Title           string
-					Cms             string
-					BodyLength      int
-					StatusCode      int
-					StatusCodeClass string
-				}{
-					URL:        webURL,
-					Title:      web.Title,
-					Cms:        web.Cms,
-					BodyLength: len(web.Body),
-					StatusCode: web.StatusCode,
-				}
-
-				// 设置状态码分类
-				if webInfo.StatusCode >= 200 && webInfo.StatusCode < 300 {
-					webInfo.StatusCodeClass = "2xx"
-				} else if webInfo.StatusCode >= 300 && webInfo.StatusCode < 400 {
-					webInfo.StatusCodeClass = "3xx"
-				} else if webInfo.StatusCode >= 400 && webInfo.StatusCode < 500 {
-					webInfo.StatusCodeClass = "4xx"
-				} else if webInfo.StatusCode >= 500 {
-					webInfo.StatusCodeClass = "5xx"
-				}
-
-				// 将 Web 信息添加到 IP 数据中
-				ipData.WebInfos = append(ipData.WebInfos, webInfo)
-			}
-		}
-
-		data.IpList = append(data.IpList, ipData)
-	}
-
-	// 解析并执行模板
-	tmpl, err := template.New("report").Parse(reportTemplate)
-	if err != nil {
-		return fmt.Errorf("解析模板失败: %v", err)
-	}
-
-	if err := tmpl.Execute(file, data); err != nil {
-		return fmt.Errorf("执行模板失败: %v", err)
-	}
-
-	// 获取绝对路径
-	absPath, err := filepath.Abs(reportFile)
-	if err != nil {
-		return fmt.Errorf("获取报告绝对路径失败: %v", err)
-	}
-
-	// 转换为文件URL格式
-	fileURL := strings.ReplaceAll(absPath, "\\", "/")
-	fmt.Printf("报告已生成, 请复制以下地址到浏览器访问: %s\n", fileURL)
-	return nil
 }

@@ -2,7 +2,7 @@ package protocol_vul
 
 import (
 	"fmt"
-	config2 "github.com/polite007/Milkyway/internal/config"
+	config "github.com/polite007/Milkyway/internal/config"
 
 	"github.com/mitchellh/go-vnc"
 	"github.com/polite007/Milkyway/internal/pkg/network"
@@ -18,7 +18,7 @@ func vncConn(ip string, port int, pass string) error {
 			},
 		},
 	}
-	conn, err := network.WrapperTCP("tcp", fmt.Sprintf("%s:%v", ip, port), config2.Get().PortScanTimeout)
+	conn, err := network.WrapperTCP("tcp", fmt.Sprintf("%s:%v", ip, port), config.Get().PortScanTimeout)
 	if err != nil {
 		return err
 	}
@@ -27,13 +27,13 @@ func vncConn(ip string, port int, pass string) error {
 		defer client.Close()
 		result := fmt.Sprintf("[%s] %v:%v password:%v\n", color.Red("vnc"), ip, port, color.Red(pass))
 		logger.OutLog(result)
-		config2.Get().Result.AddProtocolVul(ip, port, "vnc", fmt.Sprintf("%v", pass))
+		config.GetAssetsResult().AddProtocolVul(ip, port, "vnc", fmt.Sprintf("%v", pass))
 	}
 	return nil
 }
 
 func vncScan(ip string, port int) {
-	for _, pass := range config2.GetDict().PasswordVnc {
+	for _, pass := range config.GetDict().PasswordVnc {
 		if err := vncConn(ip, port, pass); err == nil {
 			return
 		}

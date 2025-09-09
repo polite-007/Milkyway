@@ -41,58 +41,76 @@ func Execute() {
 }
 
 func Run() error {
-	var (
-		ipList          []string // ip列表
-		urlList         []string // url列表
-		DesignatedPorts map[string][]int
-		timeStart       = time.Now() // 任务开始时间
-		err             error
-	)
+	timeStart := time.Now()
 
 	// 解析参数
-	if err = cli.ParseArgs(); err != nil {
+	if err := cli.ParseArgs(); err != nil {
 		return err
 	}
 
 	// 解析目标&获取目标
-	ipList, urlList, DesignatedPorts, err = cli.ParseTarget()
+	ipList, urlList, DesignatedPorts, err := cli.ParseTarget()
 	if err != nil {
 		return err
 	}
 
+	// 获取全局options
+	options := config.Get()
+
+	// 先获取最终结果的结构体
+	result := config.GetAssetsResult()
+
 	// 扫描 ip
 	if len(ipList) != 0 {
-		if config.Get().Result.IpActiveList, err = task.IpActiveScan(ipList); err != nil {
+		ipActiveList, err := task.IpActiveScan(ipList)
+		if err != nil {
 			return err
 		}
-		if config.Get().Result.IpPortList, err = task.PortActiveScan(config.Get().Result.IpActiveList, cli.ParsePort(config.Get().Port), DesignatedPorts); err != nil {
+		// 添加存活的ip
+		result.AddActiveIpList(ipActiveList)
+
+		portScanTaskResult, err := task.PortActiveScan(ipActiveList, cli.ParsePort(options.Port), DesignatedPorts)
+		if err != nil {
 			return err
 		}
-		if config.Get().Result.IpPortList, config.Get().Result.WebList, err = task.WebActiveScan(config.Get().Result.IpPortList); err != nil {
+		// 添加端口信息 #主要是非http协议
+		result.AddPortInfos(portScanTaskResult)
+
+		WebScanTaskResult, err := task.WebActiveScan(config.TransformPToW(portScanTaskResult))
+		if err != nil {
 			return err
 		}
+		// 添加web信息
+		result.AddIPWebInfos(WebScanTaskResult)
 	}
 
 	// 扫描 url
 	if len(urlList) != 0 {
-		if WebListTemp, err := task.WebScanWithDomain(urlList); err == nil {
-			config.Get().Result.WebList = append(config.Get().Result.WebList, WebListTemp...)
+		WebList, err := task.WebScanWithDomain(urlList)
+		if err != nil {
+			return err
 		}
+		result.AddUrlWebInfos(WebList)
 	}
 
 	// 目录扫描
 	if !config.Get().NoDirScan {
-		if WebListTemp, err := task.DirScan(config.Get().Result.WebList); err == nil {
-			config.Get().Result.WebList = append(config.Get().Result.WebList, WebListTemp...)
+		WebListTemp, err := task.DirScan(result.GetDirScanTaskPayload())
+		if err != nil {
+			return err
 		}
+		result.AddDirScanWebInfos(WebListTemp)
 	}
 
 	// 漏洞扫描
 	if !config.Get().NoVulScan {
-		if err = task.ProtocolVulScan(config.Get().Result.IpPortList); err != nil {
+		// 协议
+		if err = task.ProtocolVulScan(result.GetProtocolVulScanTaskPayload()); err != nil {
 			return err
 		}
-		if err = task.WebPocVulScan(config.Get().Result.WebList); err != nil {
+
+		// nuclei #里面可能包括协议
+		if err = task.WebPocVulScan(result.GetWebPocVulScanPayload()); err != nil {
 			return err
 		}
 	}
@@ -104,5 +122,5 @@ func Run() error {
 	logger.LogWaitGroup.Wait()
 
 	// 导出html报告
-	return report.GenerateReport(config.Get().Result)
+	return report.GenerateReport(result)
 }

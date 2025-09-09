@@ -3,7 +3,7 @@ package task
 import (
 	"fmt"
 
-	config2 "github.com/polite007/Milkyway/internal/config"
+	"github.com/polite007/Milkyway/internal/config"
 
 	"github.com/polite007/Milkyway/internal/pkg/httpx"
 	"github.com/polite007/Milkyway/internal/pkg/web_finger"
@@ -12,14 +12,14 @@ import (
 )
 
 // newWebScanWithDomainTask
-func newWebScanWithDomainTask(targetUrls []string) ([]*config2.Resps, error) {
-	NewPool := NewWorkPool(config2.Get().WorkPoolNum)
+func newWebScanWithDomainTask(targetUrls []string) ([]*config.Resp, error) {
+	NewPool := NewWorkPool(config.Get().WorkPoolNum)
 	NewPool.Start()
 
 	f := func(args any) (any, error) {
 		p, ok := args.(string)
 		if !ok {
-			return nil, config2.GetErrors().ErrAssertion
+			return nil, config.GetErrors().ErrAssertion
 		}
 		if p[len(p)-1] == '/' {
 			p = p[:len(p)-2]
@@ -28,7 +28,7 @@ func newWebScanWithDomainTask(targetUrls []string) ([]*config2.Resps, error) {
 		if err == nil && isAlive.StatusCode != 400 {
 			return httpx.HandleResponse(isAlive)
 		}
-		return nil, config2.GetErrors().ErrTaskFailed
+		return nil, config.GetErrors().ErrTaskFailed
 	}
 
 	go func() {
@@ -41,12 +41,12 @@ func newWebScanWithDomainTask(targetUrls []string) ([]*config2.Resps, error) {
 		close(NewPool.Result)    // 关闭结果队列
 	}()
 
-	var result []*config2.Resps
+	var result []*config.Resp
 	for res := range NewPool.Result {
 		if res == nil {
 			continue
 		}
-		resultSimple := res.(*config2.Resps)
+		resultSimple := res.(*config.Resp)
 		var logOut string
 		resultSimple.Cms, resultSimple.Tags = web_finger.WebFinger(resultSimple)
 		if resultSimple.Cms == "" {

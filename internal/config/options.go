@@ -38,7 +38,6 @@ type Options struct {
 	SC     string
 	SshKey string
 	// result
-	Result *AssetsResult // 扫描过程产生的所有数据
 	// timeout mode
 	TLSHandshakeTimeout time.Duration
 	WebScanTimeout      time.Duration
@@ -58,7 +57,6 @@ func Get() *Options {
 		WebScanTimeout:      10 * time.Second,
 		PortScanTimeout:     3 * time.Second,
 		ICMPTimeOut:         2 * time.Second,
-		Result:              &AssetsResult{},
 	}
 	return application
 }
